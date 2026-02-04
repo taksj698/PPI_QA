@@ -1,1084 +1,448 @@
 "use client";
-import React, { useState, useMemo, useCallback } from "react";
+
+import React, { useState, useMemo, useEffect } from 'react';
 import {
-  Container,
-  Paper,
-  Typography,
-  TextField,
-  Grid,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Box,
-  IconButton,
-  Card,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Chip,
-  Snackbar,
-  Alert,
-  Avatar,
-  CardActionArea,
-  MenuItem,
-  Select,
-  Divider,
-  AlertColor,
-} from "@mui/material";
+  Container, Paper, Typography, Table, TableBody, TableCell,
+  TableContainer, TableHead, TableRow, Box, IconButton, Avatar,
+  MenuItem, Select, Stack, Chip, Button, InputBase, Dialog,
+  CircularProgress, Backdrop, Fade, Skeleton,
+  CardActionArea, Card, TextField, DialogContent,
+  SelectChangeEvent
+} from '@mui/material';
 import {
   Add as AddIcon,
-  Assessment as AssessmentIcon,
-  Search as SearchIcon,
   LocalShipping as TruckIcon,
-  Close as CloseIcon,
-  Send as SendIcon,
-  Save as SaveIcon,
-  Person as PersonIcon,
-  Scale as ScaleIcon,
-  ArrowForwardIos as ArrowIcon,
-  CheckCircle as CheckCircleIcon,
-  WbSunny as SunIcon,
-  BugReport as BugIcon,
-  Grass as RipeIcon,
-  ReportProblem as ProblemIcon,
-  LockOutlined as LockIcon,
   Logout as LogoutIcon,
+  Close as CloseIcon,
+  Search as SearchIcon,
   HelpOutline as HelpIcon,
-  Inventory as BoxIcon,
-  Straighten as SizeIcon,
-} from "@mui/icons-material";
+  Layers as LayersIcon,
+  Straighten as StraightenIcon,
+  Grass as GrassIcon,
+  WbSunny as SunIcon,
+  ReportProblem as WarningIcon,
+  Coronavirus as FungusIcon,
+  WaterDrop as WaterDropIcon,
+  Block as BlockIcon,
+  CheckCircle as SuccessIcon,
+  RemoveCircle as WasteIcon,
+  ChangeHistory as DeformedIcon,
+  BugReport as BugIcon,
+  Grain as SeedIcon,
+  Adjust as HollowIcon
+} from '@mui/icons-material';
 
-// ==========================================
-// 1. TYPES & INTERFACES
-// ==========================================
 
-interface Truck {
-  id: string;
-  plate: string;
-  weight: string;
-  driver: string;
-  type: string;
-  time: string;
-  supplier: string;
-}
+// --- Interfaces & Types ---
 
-interface Criteria {
+interface AssessmentCriteria {
   id: string;
   label: string;
   group: string;
   icon: React.ReactNode;
 }
 
+interface TruckQueue {
+  id: string;
+  plate: string;
+  supplier: string;
+  time: string;
+  weight: string;
+  type: string;
+}
+
 interface Round {
   id: number;
-  values: Record<string, number>;
-  sampleCount: number;
+  name: string;
 }
 
-interface AssessmentState {
-  status: string;
+interface ValuesState {
+  [key: string]: string;
 }
 
-// ==========================================
-// 2. CONSTANTS & MOCK DATA
-// ==========================================
+interface RemarksState {
+  [key: string]: string;
+}
 
-const ASSESSMENT_CRITERIA: Criteria[] = [
-  {
-    id: "large",
-    label: "ลูกใหญ่ (≥ 95 mm)",
-    group: "ขนาด",
-    icon: <SizeIcon sx={{ fontSize: 18, color: "#4caf50" }} />,
-  },
-  {
-    id: "medium",
-    label: "ลูกเล็ก (85 - 94 mm)",
-    group: "ขนาด",
-    icon: <SizeIcon sx={{ fontSize: 18, color: "#8bc34a" }} />,
-  },
-  {
-    id: "small",
-    label: "ลูกจิ๋ว (< 75-84 mm)",
-    group: "ขนาด",
-    icon: <SizeIcon sx={{ fontSize: 18, color: "#cddc39" }} />,
-  },
-  {
-    id: "raw",
-    label: "ดิบ",
-    group: "ความสุก",
-    icon: <RipeIcon sx={{ fontSize: 18, color: "#4caf50" }} />,
-  },
-  {
-    id: "yellow1",
-    label: "ปรากฎเหลือง (1-3 ตา)",
-    group: "ความสุก",
-    icon: <RipeIcon sx={{ fontSize: 18, color: "#ffeb3b" }} />,
-  },
-  {
-    id: "yellow2",
-    label: "ครึ่งลูกขึ้นไป",
-    group: "ความสุก",
-    icon: <RipeIcon sx={{ fontSize: 18, color: "#ffc107" }} />,
-  },
-  {
-    id: "rotten",
-    label: "ช้ำ > 30%, ไส้เน่า",
-    group: "ตำหนิ",
-    icon: <ProblemIcon sx={{ fontSize: 18, color: "#f44336" }} />,
-  },
-  {
-    id: "crack",
-    label: "แตก/ร้าว",
-    group: "ตำหนิ",
-    icon: <ProblemIcon sx={{ fontSize: 18, color: "#ff5722" }} />,
-  },
-  {
-    id: "sunburn",
-    label: "แดดเผา",
-    group: "ตำหนิ",
-    icon: <SunIcon sx={{ fontSize: 18, color: "#ff9800" }} />,
-  },
-  {
-    id: "fungus",
-    label: "เชื้อรา",
-    group: "ตำหนิ",
-    icon: <BugIcon sx={{ fontSize: 18, color: "#9c27b0" }} />,
-  },
-  {
-    id: "insect",
-    label: "แมลง/เพลี้ย",
-    group: "ตำหนิ",
-    icon: <BugIcon sx={{ fontSize: 18, color: "#795548" }} />,
-  },
+// --- Configuration ---
+const THEME_NAVY = '#1A237E';
+const THEME_BLUE_LIGHT = '#E3F2FD';
+const THEME_ACCENT = '#2962FF';
+const THEME_GRADIENT = 'linear-gradient(135deg, #1A237E 0%, #2962FF 100%)';
+
+const ASSESSMENT_CRITERIA: AssessmentCriteria[] = [
+  { id: 'size_large', label: 'ลูกใหญ่ (≥ 95 mm)', group: 'ขนาด', icon: <StraightenIcon fontSize="small" color="primary" /> },
+  { id: 'size_medium', label: 'ลูกเล็ก (85 - 94 mm)', group: 'ขนาด', icon: <StraightenIcon fontSize="small" color="primary" /> },
+  { id: 'size_small', label: 'ลูกจิ๋ว (< 75-84 mm)', group: 'ขนาด', icon: <StraightenIcon fontSize="small" color="primary" /> },
+  { id: 'ripe_raw', label: 'ดิบ', group: 'ความสุก', icon: <GrassIcon fontSize="small" sx={{ color: '#4CAF50' }} /> },
+  { id: 'ripe_yellow1', label: 'ปรากฎเหลือง (1-3 ตา)', group: 'ความสุก', icon: <GrassIcon fontSize="small" sx={{ color: '#FFEB3B' }} /> },
+  { id: 'ripe_half', label: 'ครึ่งลูกขึ้นไป', group: 'ความสุก', icon: <GrassIcon fontSize="small" sx={{ color: '#FFC107' }} /> },
+  { id: 'def_stunted_less', label: 'แกร็น < 30%', group: 'ตำหนิ', icon: <WarningIcon fontSize="small" sx={{ color: '#FF9800' }} /> },
+  { id: 'def_stunted_more', label: 'แกร็น > 30%', group: 'ตำหนิ', icon: <WarningIcon fontSize="small" sx={{ color: '#F44336' }} /> },
+  { id: 'def_bruised_less', label: 'ช้ำ < 30%', group: 'ตำหนิ', icon: <WaterDropIcon fontSize="small" sx={{ color: '#9C27B0' }} /> },
+  { id: 'def_bruised_mid', label: 'ช้ำ > 30-50%', group: 'ตำหนิ', icon: <WaterDropIcon fontSize="small" sx={{ color: '#7B1FA2' }} /> },
+  { id: 'def_bruised_more', label: 'ช้ำ > 50%', group: 'ตำหนิ', icon: <WaterDropIcon fontSize="small" sx={{ color: '#4A148C' }} /> },
+  { id: 'def_sunburn', label: 'แดดเผา', group: 'ตำหนิ', icon: <SunIcon fontSize="small" sx={{ color: '#FF5722' }} /> },
+  { id: 'def_hollow', label: 'เนื้อโพรง', group: 'ตำหนิ', icon: <HollowIcon fontSize="small" sx={{ color: '#795548' }} /> },
+  { id: 'def_rotten', label: 'เน่า', group: 'ตำหนิ', icon: <BlockIcon fontSize="small" color="error" /> },
+  { id: 'def_fungus', label: 'เชื้อรา', group: 'ตำหนิ', icon: <FungusIcon fontSize="small" sx={{ color: '#607D8B' }} /> },
+  { id: 'def_seed', label: 'เมล็ด', group: 'ตำหนิ', icon: <SeedIcon fontSize="small" sx={{ color: '#212121' }} /> },
+  { id: 'def_deformed', label: 'รูปร่างผิดปกติ', group: 'ตำหนิ', icon: <DeformedIcon fontSize="small" sx={{ color: '#9E9E9E' }} /> },
+  { id: 'def_pest', label: 'สิ่งปนเปื้อน/สัตว์กัดแทะ', group: 'ตำหนิ', icon: <BugIcon fontSize="small" sx={{ color: '#3E2723' }} /> },
+  { id: 'def_fraud', label: 'พันธุ์อื่น (Food Fraud)', group: 'ตำหนิ', icon: <BlockIcon fontSize="small" color="error" /> },
+  { id: 'summary_good', label: 'จำนวนลูกที่เป็นของดี', group: 'สรุปจำนวนลูก (รวม)', icon: <SuccessIcon fontSize="small" color="success" /> },
+  { id: 'summary_minor', label: 'จำนวนลูกที่มีแกร็น <30% ช้ำ <30%', group: 'สรุปจำนวนลูก (รวม)', icon: <WarningIcon fontSize="small" sx={{ color: '#FFC107' }} /> },
+  { id: 'summary_waste', label: 'จำนวนลูกที่เป็นของเสีย (*)', group: 'สรุปจำนวนลูก (รวม)', icon: <WasteIcon fontSize="small" color="error" /> },
 ];
 
-const MOCK_TRUCKS: Truck[] = [
-  {
-    id: "T001",
-    plate: "82-6989",
-    weight: "9,570",
-    driver: "สมชาย มั่นคง",
-    type: "รถ 6 ล้อ",
-    time: "08:30",
-    supplier: "สวนกำนันเปี๊ยก",
-  },
-  {
-    id: "T002",
-    plate: "70-1234",
-    weight: "12,000",
-    driver: "วิชัย รักดี",
-    type: "รถ 10 ล้อ",
-    time: "09:15",
-    supplier: "ไร่รวมทรัพย์",
-  },
-  {
-    id: "T003",
-    plate: "ผก-555",
-    weight: "4,500",
-    driver: "อำนาจ ชูใจ",
-    type: "รถกระบะ",
-    time: "10:00",
-    supplier: "เกษตรเจริญผล",
-  },
-  {
-    id: "T004",
-    plate: "77-8888",
-    weight: "15,200",
-    driver: "สมพงษ์ ยิ้มแย้ม",
-    type: "รถพ่วง",
-    time: "10:30",
-    supplier: "สวนมาลี",
-  },
+const GROUPS: string[] = ['ขนาด', 'ความสุก', 'ตำหนิ', 'สรุปจำนวนลูก (รวม)'];
+
+const MOCK_TRUCKS: TruckQueue[] = [
+  { id: 'T001', plate: '82-6989', supplier: 'สวนกำนันเปี๊ยก', time: '08:30', weight: '9.5 ตัน', type: '6 ล้อ' },
+  { id: 'T002', plate: '70-1234', supplier: 'ไร่รวมทรัพย์', time: '09:15', weight: '12.0 ตัน', type: '10 ล้อ' },
+  { id: 'T003', plate: 'ผก-555', supplier: 'เกษตรเจริญผล', time: '10:00', weight: '4.2 ตัน', type: 'กระบะ' },
+  { id: 'T004', plate: 'บพ-888', supplier: 'สวนนายเก่ง', time: '10:30', weight: '8.8 ตัน', type: '6 ล้อ' },
+  { id: 'T005', plate: 'กข-111', supplier: 'ไร่แสงจันทร์', time: '11:00', weight: '10.2 ตัน', type: '10 ล้อ' },
 ];
 
-// ==========================================
-// 3. CUSTOM HOOKS
-// ==========================================
 
-const useAssessment = () => {
-  const [rounds, setRounds] = useState<Round[]>(() => [
-    { id: Date.now(), values: {}, sampleCount: 10 },
-  ]);
 
-  const [rowRemarks, setRowRemarks] = useState<Record<string, string>>({});
-  const [headerInfo, setHeaderInfo] = useState<AssessmentState>({
-    status: "New",
-  });
 
-  const updateValue = useCallback(
-    (roundId: number, criteriaId: string, value: string) => {
-      const val = parseInt(value);
-      setRounds((prev) =>
-        prev.map((r) =>
-          r.id === roundId
-            ? {
-                ...r,
-                values: { ...r.values, [criteriaId]: isNaN(val) ? 0 : val },
-              }
-            : r,
-        ),
-      );
-    },
-    [],
-  );
 
-  const updateSampleCount = useCallback((roundId: number, count: number) => {
-    setRounds((prev) =>
-      prev.map((r) => (r.id === roundId ? { ...r, sampleCount: count } : r)),
-    );
-  }, []);
 
-  const addRound = useCallback(() => {
-    setRounds((prev) => [
-      ...prev,
-      { id: Date.now(), values: {}, sampleCount: 10 },
-    ]);
-  }, []);
 
-  const removeRound = useCallback((roundId: number) => {
-    setRounds((prev) =>
-      prev.length > 1 ? prev.filter((r) => r.id !== roundId) : prev,
-    );
-  }, []);
+const App: React.FC = () => {
+  const [selectedTruck, setSelectedTruck] = useState<TruckQueue | null>(null);
+  const [globalSampleCount, setGlobalSampleCount] = useState<number>(10);
+  const [rounds, setRounds] = useState<Round[]>([{ id: Date.now(), name: 'R1' }]);
+  const [values, setValues] = useState<ValuesState>({});
+  const [rowRemarks, setRowRemarks] = useState<RemarksState>({});
 
-  const updateRemark = useCallback((criteriaId: string, value: string) => {
-    setRowRemarks((prev) => ({ ...prev, [criteriaId]: value }));
-  }, []);
-
-  const totals = useMemo(() => {
-    const summary: Record<string, number> = {};
-    ASSESSMENT_CRITERIA.forEach((c) => {
-      summary[c.id] = rounds.reduce(
-        (sum, round) => sum + (round.values[c.id] || 0),
-        0,
-      );
-    });
-    return summary;
-  }, [rounds]);
-
-  const totalSamples = useMemo(
-    () => rounds.reduce((sum, r) => sum + r.sampleCount, 0),
-    [rounds],
-  );
-
-  return {
-    rounds,
-    addRound,
-    removeRound,
-    updateValue,
-    updateSampleCount,
-    rowRemarks,
-    updateRemark,
-    totals,
-    totalSamples,
-    headerInfo,
-    setHeaderInfo,
-  };
-};
-
-// ==========================================
-// 4. SUB-COMPONENTS
-// ==========================================
-
-interface SearchDialogProps {
-  open: boolean;
-  onClose: () => void;
-  onSelect: (truck: Truck) => void;
-  searchTerm: string;
-  setSearchTerm: (val: string) => void;
-}
-
-const TruckSearchDialog: React.FC<SearchDialogProps> = ({
-  open,
-  onClose,
-  onSelect,
-  searchTerm,
-  setSearchTerm,
-}) => {
-  const filteredTrucks = MOCK_TRUCKS.filter(
-    (truck) =>
-      truck.plate.includes(searchTerm) ||
-      truck.driver.includes(searchTerm) ||
-      truck.supplier.includes(searchTerm),
-  );
-
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullWidth
-      maxWidth="sm"
-      PaperProps={{
-        sx: { borderRadius: 4, bgcolor: "#f8f9fa", overflow: "hidden" },
-      }}
-    >
-      <DialogTitle sx={{ p: 3, pb: 0, bgcolor: "white" }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 1,
-          }}
-        >
-          <Typography variant="h5" sx={{ fontWeight: 900, color: "#1a237e" }}>
-            เลือกคิวรถประเมิน
-          </Typography>
-          <IconButton
-            onClick={onClose}
-            size="small"
-            sx={{ bgcolor: "#f5f5f5" }}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </Box>
-        <TextField
-          fullWidth
-          placeholder="ค้นหาทะเบียน, ชื่อคนขับ, หรือแหล่งที่มา..."
-          variant="outlined"
-          size="small"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: <SearchIcon sx={{ mr: 1, color: "#1a237e" }} />,
-            sx: { borderRadius: 3, bgcolor: "#f8f9fa" },
-          }}
-          sx={{ mb: 3, mt: 1 }}
-        />
-      </DialogTitle>
-
-      <DialogContent sx={{ p: 2, pt: 1, maxHeight: "60vh" }}>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-          {filteredTrucks.length > 0 ? (
-            filteredTrucks.map((t) => (
-              <Card
-                key={t.id}
-                elevation={0}
-                sx={{
-                  borderRadius: 3,
-                  border: "1px solid #e0e0e0",
-                  transition: "0.2s",
-                  bgcolor: "white",
-                  "&:hover": {
-                    transform: "translateY(-2px)",
-                    boxShadow: "0 6px 15px rgba(0,0,0,0.06)",
-                    borderColor: "#1a237e",
-                  },
-                }}
-              >
-                <CardActionArea sx={{ p: 2 }} onClick={() => onSelect(t)}>
-                  <Grid container spacing={2} alignItems="center">
-                    <Grid>
-                      <Avatar
-                        sx={{
-                          bgcolor: "#e8eaf6",
-                          color: "#1a237e",
-                          width: 48,
-                          height: 48,
-                        }}
-                      >
-                        <TruckIcon />
-                      </Avatar>
-                    </Grid>
-                    <Grid size={12}>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          mb: 0.5,
-                        }}
-                      >
-                        <Typography
-                          variant="h6"
-                          sx={{ fontWeight: 900, lineHeight: 1.1 }}
-                        >
-                          {t.plate}
-                        </Typography>
-                        <Chip
-                          label={t.type}
-                          size="small"
-                          variant="outlined"
-                          sx={{ height: 18, fontSize: "9px", fontWeight: 800 }}
-                        />
-                      </Box>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
-                      >
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 0.3,
-                          }}
-                        >
-                          <PersonIcon
-                            sx={{ fontSize: 13, color: "text.disabled" }}
-                          />
-                          <Typography
-                            variant="caption"
-                            sx={{ color: "text.secondary" }}
-                          >
-                            {t.driver}
-                          </Typography>
-                        </Box>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 0.3,
-                          }}
-                        >
-                          <ScaleIcon
-                            sx={{ fontSize: 13, color: "text.disabled" }}
-                          />
-                          <Typography
-                            variant="caption"
-                            sx={{ color: "text.secondary" }}
-                          >
-                            {t.weight} kg
-                          </Typography>
-                        </Box>
-                      </Box>
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          color: "#1a237e",
-                          fontWeight: 700,
-                          mt: 0.5,
-                          display: "block",
-                        }}
-                      >
-                        📍 {t.supplier}
-                      </Typography>
-                    </Grid>
-                    <Grid>
-                      <ArrowIcon sx={{ fontSize: 16, color: "#ccc" }} />
-                    </Grid>
-                  </Grid>
-                </CardActionArea>
-              </Card>
-            ))
-          ) : (
-            <Box sx={{ textAlign: "center", py: 4 }}>
-              <Typography color="textSecondary">ไม่พบข้อมูลที่ค้นหา</Typography>
-            </Box>
-          )}
-        </Box>
-      </DialogContent>
-      <Divider />
-      <DialogActions sx={{ p: 2, bgcolor: "#fff" }}>
-        <Typography
-          variant="caption"
-          color="textSecondary"
-          sx={{ mr: "auto", ml: 1 }}
-        >
-          ผลลัพธ์: {filteredTrucks.length} รายการ
-        </Typography>
-        <Button onClick={onClose} sx={{ fontWeight: "bold" }}>
-          ปิด
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
-};
-
-interface TruckInfoCardProps {
-  selectedTruck: Truck;
-  status: string;
-  onAddRound: () => void;
-}
-
-const TruckInfoCard: React.FC<TruckInfoCardProps> = ({
-  selectedTruck,
-  status,
-  onAddRound,
-}) => (
-  <Paper sx={{ p: 2, mb: 2, borderRadius: 3, borderLeft: "6px solid #1a237e" }}>
-    <Grid container spacing={2} alignItems="center">
-      <Grid size={{ xs: 12, md: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <TruckIcon color="primary" />
-          <Box>
-            <Typography
-              variant="caption"
-              color="textSecondary"
-              sx={{ display: "block", lineHeight: 1 }}
-            >
-              ทะเบียนรถ
-            </Typography>
-            <Typography variant="body1" sx={{ fontWeight: 800 }}>
-              {selectedTruck.plate}
-            </Typography>
-          </Box>
-        </Box>
-      </Grid>
-      <Grid size={{ xs: 6, md: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <PersonIcon color="primary" />
-          <Box>
-            <Typography
-              variant="caption"
-              color="textSecondary"
-              sx={{ display: "block", lineHeight: 1 }}
-            >
-              แหล่งที่มา / สวน
-            </Typography>
-            <Typography variant="body2" sx={{ fontWeight: 700 }}>
-              {selectedTruck.supplier}
-            </Typography>
-          </Box>
-        </Box>
-      </Grid>
-      <Grid size={{ xs: 6, md: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <CheckCircleIcon color="primary" />
-          <Box>
-            <Typography
-              variant="caption"
-              color="textSecondary"
-              sx={{ display: "block", lineHeight: 1 }}
-            >
-              สถานะการตรวจ
-            </Typography>
-            <Chip
-              label={status}
-              color={status.includes("Draft") ? "warning" : "primary"}
-              size="small"
-              sx={{ height: 20, fontSize: "10px" }}
-            />
-          </Box>
-        </Box>
-      </Grid>
-      <Grid size={{ xs: 12, md: 3 }} sx={{ textAlign: "right" }}>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<AddIcon />}
-          onClick={onAddRound}
-          sx={{ borderRadius: 2 }}
-        >
-          เพิ่มรอบการสุ่ม
-        </Button>
-      </Grid>
-    </Grid>
-  </Paper>
-);
-
-interface TableProps {
-  rounds: Round[];
-  totals: Record<string, number>;
-  totalSamples: number;
-  rowRemarks: Record<string, string>;
-  onValueChange: (rid: number, cid: string, val: string) => void;
-  onSampleChange: (rid: number, val: number) => void;
-  onRemarkChange: (cid: string, val: string) => void;
-  onRemoveRound: (rid: number) => void;
-}
-
-const AssessmentTable: React.FC<TableProps> = ({
-  rounds,
-  totals,
-  totalSamples,
-  rowRemarks,
-  onValueChange,
-  onSampleChange,
-  onRemarkChange,
-  onRemoveRound,
-}) => (
-  <TableContainer
-    component={Paper}
-    sx={{
-      borderRadius: 3,
-      overflowX: "auto",
-      boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-    }}
-  >
-    <Table size="small" sx={{ minWidth: 900 }}>
-      <TableHead sx={{ bgcolor: "#f8f9fa" }}>
-        <TableRow>
-          <TableCell
-            sx={{
-              fontWeight: "bold",
-              width: "240px",
-              position: "sticky",
-              left: 0,
-              bgcolor: "#f8f9fa",
-              zIndex: 10,
-              borderRight: "2px solid #e0e0e0",
-            }}
-          >
-            รายการประเมินคุณภาพ
-          </TableCell>
-          {rounds.map((r, i) => (
-            <TableCell
-              key={r.id}
-              align="center"
-              sx={{ fontWeight: "bold", minWidth: "100px" }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  mb: 0.5,
-                }}
-              >
-                <Avatar
-                  sx={{
-                    width: 22,
-                    height: 22,
-                    fontSize: 10,
-                    bgcolor: "#1a237e",
-                    mr: 0.5,
-                  }}
-                >
-                  R{i + 1}
-                </Avatar>
-                <IconButton
-                  size="small"
-                  onClick={() => onRemoveRound(r.id)}
-                  disabled={rounds.length === 1}
-                  sx={{ color: "error.main" }}
-                >
-                  <CloseIcon sx={{ fontSize: 14 }} />
-                </IconButton>
-              </Box>
-              <Select
-                size="small"
-                value={r.sampleCount}
-                onChange={(e) => onSampleChange(r.id, Number(e.target.value))}
-                sx={{
-                  height: 25,
-                  fontSize: "11px",
-                  borderRadius: 1.5,
-                  minWidth: 65,
-                }}
-              >
-                {[5, 10, 15, 20].map((v) => (
-                  <MenuItem key={v} value={v}>
-                    สุ่ม {v}
-                  </MenuItem>
-                ))}
-              </Select>
-            </TableCell>
-          ))}
-          <TableCell
-            align="center"
-            sx={{ fontWeight: "bold", bgcolor: "#e3f2fd", color: "#1a237e" }}
-          >
-            รวม (ลูก)
-          </TableCell>
-          <TableCell
-            align="center"
-            sx={{ fontWeight: "bold", bgcolor: "#fffde7", color: "#f57f17" }}
-          >
-            %
-          </TableCell>
-          <TableCell sx={{ fontWeight: "bold", minWidth: "220px" }}>
-            หมายเหตุ
-          </TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {ASSESSMENT_CRITERIA.map((c) => (
-          <TableRow key={c.id} hover>
-            <TableCell
-              sx={{
-                position: "sticky",
-                left: 0,
-                bgcolor: "white",
-                zIndex: 5,
-                borderRight: "2px solid #f0f0f0",
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                {c.icon}
-                <Box>
-                  <Typography
-                    variant="body2"
-                    sx={{ fontWeight: 700, whiteSpace: "nowrap" }}
-                  >
-                    {c.label}
-                  </Typography>
-                  <Typography variant="caption" color="textDisabled">
-                    {c.group}
-                  </Typography>
-                </Box>
-              </Box>
-            </TableCell>
-            {rounds.map((r) => (
-              <TableCell key={r.id} align="center">
-                <input
-                  type="number"
-                  style={{
-                    width: "50px",
-                    textAlign: "center",
-                    borderRadius: "6px",
-                    border: "1px solid #e0e0e0",
-                    padding: "4px",
-                  }}
-                  value={r.values[c.id] || ""}
-                  onChange={(e) => onValueChange(r.id, c.id, e.target.value)}
-                />
-              </TableCell>
-            ))}
-            <TableCell
-              align="center"
-              sx={{ fontWeight: 800, bgcolor: "#f1f8fe" }}
-            >
-              {totals[c.id]}
-            </TableCell>
-            <TableCell
-              align="center"
-              sx={{
-                fontWeight: 900,
-                color: totals[c.id] > 0 ? "error.main" : "text.disabled",
-                bgcolor: "#fffdf2",
-              }}
-            >
-              {totalSamples > 0
-                ? ((totals[c.id] / totalSamples) * 100).toFixed(1)
-                : 0}
-              %
-            </TableCell>
-            <TableCell>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="..."
-                value={rowRemarks[c.id] || ""}
-                onChange={(e) => onRemarkChange(c.id, e.target.value)}
-                InputProps={{ sx: { fontSize: "12px", borderRadius: 2 } }}
-              />
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  </TableContainer>
-);
-
-export default function Page() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [selectedTruck, setSelectedTruck] = useState<Truck | null>(null);
-  const assessment = useAssessment();
-
-  // UI Control
+  // UI States
   const [openSearch, setOpenSearch] = useState<boolean>(false);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [confirmDialog, setConfirmDialog] = useState<{
-    open: boolean;
-    type: string;
-    data: number | null;
-  }>({ open: false, type: "", data: null });
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: AlertColor;
-  }>({ open: false, message: "", severity: "success" });
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [confirmOpen, setConfirmOpen] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleActionConfirm = () => {
-    const { type } = confirmDialog;
-    if (type === "DELETE_ROUND" && confirmDialog.data !== null) {
-      assessment.removeRound(confirmDialog.data);
-      setSnackbar({ open: true, message: "ลบรอบสำเร็จ", severity: "info" });
-    } else if (type === "SAVE_DRAFT") {
-      assessment.setHeaderInfo({ status: "Draft Saved" });
-      setSnackbar({
-        open: true,
-        message: "บันทึกร่างสำเร็จ",
-        severity: "success",
-      });
-    } else if (type === "SUBMIT") {
-      assessment.setHeaderInfo({ status: "Submitted" });
-      setSnackbar({
-        open: true,
-        message: "ส่งผลการตรวจเรียบร้อยแล้ว",
-        severity: "success",
-      });
+  // Filter trucks based on search
+  const filteredTrucks = useMemo(() => {
+    return MOCK_TRUCKS.filter(t =>
+      t.plate.includes(searchQuery) ||
+      t.supplier.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery]);
+
+  // Simulation for Skeleton Loading
+  useEffect(() => {
+    if (openSearch) {
+      setIsSearching(true);
+      const timer = setTimeout(() => setIsSearching(false), 800);
+      return () => clearTimeout(timer);
     }
-    setConfirmDialog({ open: false, type: "", data: null });
+  }, [openSearch]);
+
+  const handleValueChange = (roundId: number, criteriaId: string, val: string) => {
+    setValues(prev => ({ ...prev, [`${roundId}_${criteriaId}`]: val }));
   };
 
-  const handleSelectTruck = (truck: Truck) => {
-    setSelectedTruck(truck);
-    setOpenSearch(false);
-    setSearchTerm("");
-    assessment.setHeaderInfo({ status: "In Progress" });
+  const getNumericValue = (roundId: number, criteriaId: string): number => {
+    const val = values[`${roundId}_${criteriaId}`];
+    return val === '' || val === undefined ? 0 : parseFloat(val) || 0;
+  };
+
+  const getRoundTotalForGroup = (roundId: number, groupName: string): number => {
+    return ASSESSMENT_CRITERIA
+      .filter(c => c.group === groupName)
+      .reduce((sum, c) => sum + getNumericValue(roundId, c.id), 0);
+  };
+
+  const getRowTotal = (criteriaId: string): number => {
+    return rounds.reduce((sum, r) => sum + getNumericValue(r.id, criteriaId), 0);
+  };
+
+  const targetLimit = globalSampleCount;
+  const totalSamplesOverall = rounds.length * targetLimit;
+
+  const hasValidationError = useMemo(() => {
+    return rounds.some(r =>
+      GROUPS.some(g => getRoundTotalForGroup(r.id, g) > (targetLimit + 0.001))
+    );
+  }, [rounds, values, targetLimit]);
+
+  const handleSubmit = async () => {
+    setConfirmOpen(false);
+    setIsLoading(true);
+    // Simulate API Call
+    await new Promise(r => setTimeout(r, 1500));
+    setIsLoading(false);
+    setSelectedTruck(null);
+    setRounds([{ id: Date.now(), name: 'R1' }]);
+    setValues({});
+    setSearchQuery('');
+  };
+
+  const handleSampleCountChange = (event: SelectChangeEvent<number>) => {
+    setGlobalSampleCount(Number(event.target.value));
   };
 
   return (
-    <Box sx={{ bgcolor: "#f4f6f8", minHeight: "100vh", pb: 15 }}>
+    <Box sx={{ bgcolor: '#F4F7F9', minHeight: '100vh', display: 'flex', flexDirection: 'column', pb: { xs: 25, md: 18 } }}>
+
+      <Backdrop sx={{ color: '#fff', zIndex: 3000, flexDirection: 'column', backdropFilter: 'blur(4px)' }} open={isLoading}>
+        <CircularProgress color="inherit" size={50} />
+        <Typography sx={{ mt: 2, fontWeight: 700 }}>กำลังส่งข้อมูลเข้าสู่ระบบ...</Typography>
+      </Backdrop>
+
       {/* Navbar */}
-      <Box
-        sx={{
-          bgcolor: "#1a237e",
-          color: "white",
-          py: 1.5,
-          px: 2,
-          mb: 3,
-          boxShadow: 2,
-        }}
-      >
-        <Container
-          maxWidth="xl"
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Avatar sx={{ bgcolor: "white", width: 32, height: 32 }}>
-              <AssessmentIcon sx={{ color: "#1a237e", fontSize: 20 }} />
-            </Avatar>
-            <Typography variant="h6" sx={{ fontWeight: 800 }}>
-              QC PINEAPPLE
-            </Typography>
-          </Box>
-          <Box sx={{ display: "flex", gap: 1 }}>
-            <Button
-              color="inherit"
-              onClick={() => setOpenSearch(true)}
-              startIcon={<TruckIcon />}
-              sx={{ bgcolor: "rgba(255,255,255,0.1)", borderRadius: 2, px: 2 }}
-            >
-              {selectedTruck ? selectedTruck.plate : "เลือกรถ"}
-            </Button>
-            <IconButton color="inherit" onClick={() => setIsLoggedIn(false)}>
-              <LogoutIcon />
-            </IconButton>
-          </Box>
-        </Container>
+      <Box sx={{ bgcolor: THEME_NAVY, color: 'white', px: { xs: 2, md: 3 }, py: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 1100, boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
+        <Stack direction="row" alignItems="center" spacing={1.5}>
+          <Avatar sx={{ width: 32, height: 32, bgcolor: 'white', color: THEME_NAVY, fontWeight: 900 }}>Q</Avatar>
+          <Typography variant="subtitle1" fontWeight={800} sx={{ letterSpacing: 0.5 }}>QC PINEAPPLE (TS)</Typography>
+        </Stack>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <IconButton size="small" onClick={() => setOpenSearch(true)} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.1)' }}>
+            <SearchIcon fontSize="small" />
+          </IconButton>
+          <IconButton size="small" sx={{ color: 'white' }} onClick={() => window.location.reload()}><LogoutIcon fontSize="small" /></IconButton>
+        </Stack>
       </Box>
 
-      <Container maxWidth="xl">
-        {selectedTruck ? (
-          <>
-            <TruckInfoCard
-              selectedTruck={selectedTruck}
-              status={assessment.headerInfo.status}
-              onAddRound={assessment.addRound}
-            />
-
-            <AssessmentTable
-              rounds={assessment.rounds}
-              totals={assessment.totals}
-              totalSamples={assessment.totalSamples}
-              rowRemarks={assessment.rowRemarks}
-              onValueChange={assessment.updateValue}
-              onSampleChange={assessment.updateSampleCount}
-              onRemarkChange={assessment.updateRemark}
-              onRemoveRound={(id) =>
-                setConfirmDialog({ open: true, type: "DELETE_ROUND", data: id })
-              }
-            />
-          </>
+      {/* Main Content */}
+      <Container maxWidth="xl" sx={{ mt: 2 }}>
+        {!selectedTruck ? (
+          <Fade in>
+            <Box sx={{ textAlign: 'center', py: 15 }}>
+              <TruckIcon sx={{ fontSize: 100, color: 'rgba(0,0,0,0.05)', mb: 2 }} />
+              <Typography variant="h5" fontWeight={800} gutterBottom>ระบบประเมินคุณภาพหน้าโรงงาน</Typography>
+              <Typography color="textSecondary" sx={{ mb: 4 }}>กรุณาเลือกคิวรถเพื่อเริ่มบันทึกข้อมูลผลการตรวจ</Typography>
+              <Button
+                variant="contained" size="large" startIcon={<SearchIcon />}
+                onClick={() => setOpenSearch(true)}
+                sx={{ borderRadius: 10, px: 6, py: 1.5, bgcolor: THEME_ACCENT, fontWeight: 800, fontSize: '1.1rem', boxShadow: '0 8px 20px rgba(41, 98, 255, 0.3)' }}
+              >
+                ค้นหาคิวรถ
+              </Button>
+            </Box>
+          </Fade>
         ) : (
-          <Box sx={{ textAlign: "center", py: 12 }}>
-            <Avatar
-              sx={{
-                width: 120,
-                height: 120,
-                bgcolor: "#e8eaf6",
-                color: "#1a237e",
-                mx: "auto",
-                mb: 3,
-              }}
-            >
-              <TruckIcon sx={{ fontSize: 60 }} />
-            </Avatar>
-            <Typography
-              variant="h4"
-              sx={{ fontWeight: 900, mb: 1, color: "#1a237e" }}
-            >
-              พร้อมเริ่มงาน
-            </Typography>
-            <Typography color="textSecondary" sx={{ mb: 4 }}>
-              กรุณาเลือกรถจากคิวชั่งเพื่อเริ่มบันทึกข้อมูล
-            </Typography>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={() => setOpenSearch(true)}
-              startIcon={<SearchIcon />}
-              sx={{ borderRadius: 5, px: 6, py: 1.5, fontWeight: "bold" }}
-            >
-              ค้นหาคิวรถ
-            </Button>
-          </Box>
+          <>
+            <Paper elevation={0} sx={{ p: 2, borderRadius: 4, border: '1px solid #E0E0E0', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, mb: 2, bgcolor: 'white' }}>
+              <Stack direction="row" spacing={2} alignItems="center" sx={{ flexGrow: 1, minWidth: 250 }}>
+                <Avatar sx={{ width: 48, height: 48, bgcolor: THEME_BLUE_LIGHT, color: THEME_ACCENT }}><TruckIcon /></Avatar>
+                <Box>
+                  <Typography variant="caption" color="textSecondary" fontWeight={700}>ทะเบียน / ผู้ส่ง</Typography>
+                  <Typography variant="subtitle1" fontWeight={900} color={THEME_NAVY} sx={{ lineHeight: 1.2 }}>{selectedTruck.plate} — {selectedTruck.supplier}</Typography>
+                </Box>
+              </Stack>
+
+              <Stack direction="row" spacing={2} alignItems="center" sx={{ minWidth: 180 }}>
+                <Box sx={{ p: 1, bgcolor: '#FFF3E0', borderRadius: 2 }}><LayersIcon sx={{ color: '#EF6C00' }} /></Box>
+                <Box>
+                  <Typography variant="caption" color="textSecondary" fontWeight={700}>สุ่มรอบละ (ลูก)</Typography>
+                  <Select
+                    size="small"
+                    value={globalSampleCount}
+                    onChange={handleSampleCountChange}
+                    variant="standard"
+                    disableUnderline
+                    sx={{ fontWeight: 900, color: '#EF6C00', fontSize: '1.1rem', ml: 0.5 }}
+                  >
+                    {[5, 10, 15, 20].map(val => (
+                      <MenuItem key={val} value={val}>{val} ลูก</MenuItem>
+                    ))}
+                  </Select>
+                </Box>
+              </Stack>
+
+              <Button
+                variant="outlined" startIcon={<AddIcon />}
+                onClick={() => setRounds([...rounds, { id: Date.now(), name: `R${rounds.length + 1}` }])}
+                sx={{ borderRadius: 3, fontWeight: 800, px: 3, height: 45, borderColor: THEME_ACCENT, color: THEME_ACCENT }}
+              >
+                เพิ่มรอบตรวจ
+              </Button>
+            </Paper>
+
+            <TableContainer component={Paper} elevation={0} sx={{
+              borderRadius: 4,
+              border: '1px solid #E0E0E0',
+              maxHeight: 'calc(100vh - 420px)',
+              overflow: 'auto'
+            }}>
+              <Table stickyHeader size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 800, bgcolor: '#F8F9FA', minWidth: { xs: 200, sm: 280 }, position: 'sticky', left: 0, zIndex: 1000, borderRight: '1px solid #E0E0E0' }}>
+                      รายการประเมินคุณภาพ
+                    </TableCell>
+                    {rounds.map((r) => (
+                      <TableCell key={r.id} align="center" sx={{ bgcolor: '#F8F9FA', minWidth: 100 }}>
+                        <Stack direction="row" justifyContent="center" alignItems="center" spacing={0.5}>
+                          <Chip label={r.name} size="small" sx={{ bgcolor: THEME_NAVY, color: 'white', fontWeight: 800, height: 20 }} />
+                          {rounds.length > 1 && (
+                            <IconButton size="small" onClick={() => setRounds(rounds.filter(rd => rd.id !== r.id))} sx={{ p: 0 }}>
+                              <CloseIcon sx={{ fontSize: 14 }} color="error" />
+                            </IconButton>
+                          )}
+                        </Stack>
+                      </TableCell>
+                    ))}
+                    <TableCell align="center" sx={{ fontWeight: 800, bgcolor: '#E3F2FD', color: THEME_NAVY }}>รวม</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 800, bgcolor: '#FFF8E1', color: '#F57F17' }}>%</TableCell>
+                    <TableCell sx={{ fontWeight: 800, bgcolor: '#F8F9FA' }}>หมายเหตุ</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {GROUPS.map((groupName) => (
+                    <React.Fragment key={groupName}>
+                      <TableRow>
+                        <TableCell sx={{ bgcolor: groupName.includes('สรุป') ? '#E8F5E9' : '#F5F5F5', py: 1, position: 'sticky', left: 0, zIndex: 800, borderRight: '1px solid #E0E0E0' }}>
+                          <Typography variant="caption" sx={{ fontWeight: 900, color: groupName.includes('สรุป') ? '#1B5E20' : '#666' }}>
+                            {groupName}
+                          </Typography>
+                        </TableCell>
+                        <TableCell colSpan={rounds.length + 3} sx={{ bgcolor: groupName.includes('สรุป') ? '#E8F5E9' : '#F5F5F5', py: 1 }} />
+                      </TableRow>
+
+                      {ASSESSMENT_CRITERIA.filter(c => c.group === groupName).map((item) => (
+                        <TableRow key={item.id} hover>
+                          <TableCell sx={{ py: 1.5, pl: 3, position: 'sticky', left: 0, bgcolor: 'white', zIndex: 700, borderRight: '1px solid #EEE' }}>
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>{item.icon}</Box>
+                              <Typography variant="body2" sx={{ fontWeight: groupName.includes('สรุป') ? 800 : 500 }}>{item.label}</Typography>
+                            </Stack>
+                          </TableCell>
+
+                          {rounds.map(r => {
+                            const groupSum = getRoundTotalForGroup(r.id, groupName);
+                            const isOver = groupSum > (targetLimit + 0.001);
+                            const currentVal = values[`${r.id}_${item.id}`] || '';
+
+                            return (
+                              <TableCell key={r.id} align="center">
+                                <TextField
+                                  variant="outlined" size="small" autoComplete="off" type="number"
+                                  value={currentVal}
+                                  onChange={(e) => handleValueChange(r.id, item.id, e.target.value)}
+                                  error={isOver}
+                                  inputProps={{ style: { textAlign: 'center', fontWeight: 800 } }}
+                                  sx={{ width: 70, '& .MuiOutlinedInput-root': { borderRadius: 1.5, height: 36 } }}
+                                />
+                              </TableCell>
+                            );
+                          })}
+
+                          <TableCell align="center" sx={{ fontWeight: 900, bgcolor: '#F9FCFF', color: THEME_NAVY }}>
+                            {getRowTotal(item.id)}
+                          </TableCell>
+
+                          <TableCell align="center" sx={{ fontWeight: 900, color: '#F57F17', bgcolor: '#FFFDF0' }}>
+                            {totalSamplesOverall > 0 ? ((getRowTotal(item.id) / totalSamplesOverall) * 100).toFixed(1) : '0'}%
+                          </TableCell>
+
+                          <TableCell>
+                            <InputBase
+                              placeholder="..." value={rowRemarks[item.id] || ''}
+                              onChange={(e) => setRowRemarks({ ...rowRemarks, [item.id]: e.target.value })}
+                              sx={{ fontSize: '0.8rem', width: '100%' }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </React.Fragment>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </>
         )}
       </Container>
 
-      {/* Floating Action Bar */}
+      {/* Action Bar */}
       {selectedTruck && (
-        <Box
-          sx={{
-            position: "fixed",
-            bottom: 20,
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: "90%",
-            maxWidth: 1000,
-            bgcolor: "white",
-            p: 2,
-            borderRadius: 5,
-            boxShadow: "0 10px 40px rgba(0,0,0,0.15)",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            zIndex: 1000,
-            border: "1px solid #e0e0e0",
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Avatar sx={{ bgcolor: "#e3f2fd", color: "#1a237e" }}>
-              <BoxIcon />
-            </Avatar>
-            <Box>
-              <Typography variant="caption" color="textSecondary">
-                ยอดสุ่มรวม
-              </Typography>
-              <Typography variant="h6" color="primary" sx={{ fontWeight: 900 }}>
-                {assessment.totalSamples} ลูก
-              </Typography>
-            </Box>
-          </Box>
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <Button
-              startIcon={<SaveIcon />}
-              color="warning"
-              variant="outlined"
-              onClick={() =>
-                setConfirmDialog({ open: true, type: "SAVE_DRAFT", data: null })
-              }
-              sx={{ borderRadius: 3, fontWeight: "bold" }}
-            >
-              บันทึกร่าง
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<SendIcon />}
-              onClick={() =>
-                setConfirmDialog({ open: true, type: "SUBMIT", data: null })
-              }
-              sx={{
-                borderRadius: 3,
-                px: 4,
-                fontWeight: "bold",
-                bgcolor: "#1a237e",
-              }}
-            >
-              ส่งผลตรวจ
-            </Button>
-          </Box>
+        <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, p: 2, bgcolor: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(10px)', borderTop: '1px solid #DDD', zIndex: 1050 }}>
+          <Container maxWidth="xl">
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} justifyContent="space-between" alignItems="center">
+              <Stack direction="row" spacing={4}>
+                <Box>
+                  <Typography variant="caption" color="textSecondary" fontWeight={800}>รอบการตรวจ</Typography>
+                  <Typography variant="h5" fontWeight={900}>{rounds.length}</Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="textSecondary" fontWeight={800}>ยอดสุ่มรวม</Typography>
+                  <Typography variant="h5" fontWeight={900} color={THEME_ACCENT}>{totalSamplesOverall}</Typography>
+                </Box>
+              </Stack>
+              <Stack direction="row" spacing={2} sx={{ width: { xs: '100%', md: '400px' } }}>
+                <Button fullWidth variant="outlined" sx={{ borderRadius: 3, fontWeight: 800, height: 50 }}>บันทึกร่าง</Button>
+                <Button
+                  fullWidth variant="contained"
+                  onClick={() => setConfirmOpen(true)}
+                  disabled={hasValidationError}
+                  sx={{ borderRadius: 3, fontWeight: 900, height: 50, background: THEME_GRADIENT }}
+                >
+                  ส่งผลตรวจ
+                </Button>
+              </Stack>
+            </Stack>
+          </Container>
         </Box>
       )}
 
-      {/* Search Dialog */}
-      <TruckSearchDialog
-        open={openSearch}
-        onClose={() => setOpenSearch(false)}
-        onSelect={handleSelectTruck}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-      />
-
-      {/* Confirmation Dialog */}
-      <Dialog
-        open={confirmDialog.open}
-        onClose={() => setConfirmDialog({ open: false, type: "", data: null })}
-        PaperProps={{ sx: { borderRadius: 4, p: 1 } }}
-      >
-        <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Avatar
-            sx={{
-              bgcolor:
-                confirmDialog.type === "SAVE_DRAFT"
-                  ? "#fff9c4"
-                  : confirmDialog.type === "SUBMIT"
-                    ? "#e8eaf6"
-                    : "#ffebee",
-              color:
-                confirmDialog.type === "SAVE_DRAFT"
-                  ? "#f57f17"
-                  : confirmDialog.type === "SUBMIT"
-                    ? "#1a237e"
-                    : "#d32f2f",
+      {/* Search Modal */}
+      <Dialog open={openSearch} onClose={() => setOpenSearch(false)} fullWidth maxWidth="xs">
+        <Box sx={{ bgcolor: THEME_NAVY, p: 3, color: 'white' }}>
+          <Typography variant="h6" fontWeight={800} mb={2}>เลือกคิวรถ</Typography>
+          <TextField
+            fullWidth placeholder="ทะเบียน/สวน..." size="small" value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: <SearchIcon sx={{ color: 'white', mr: 1 }} />,
+              sx: { bgcolor: 'rgba(255,255,255,0.1)', color: 'white', borderRadius: 2, '& fieldset': { border: 'none' } }
             }}
-          >
-            {confirmDialog.type === "SAVE_DRAFT" ? (
-              <SaveIcon />
-            ) : confirmDialog.type === "SUBMIT" ? (
-              <HelpIcon />
-            ) : (
-              <ProblemIcon />
-            )}
-          </Avatar>
-          <Typography variant="h6" component="span" sx={{ fontWeight: 800 }}>
-            {confirmDialog.type === "SAVE_DRAFT"
-              ? "ยืนยันบันทึกร่าง"
-              : confirmDialog.type === "SUBMIT"
-                ? "ยืนยันส่งผลตรวจ"
-                : "ยืนยันลบข้อมูล"}
-          </Typography>
-        </DialogTitle>
-        <DialogContent>
-          <Typography>
-            {confirmDialog.type === "SAVE_DRAFT"
-              ? "ข้อมูลจะถูกเก็บไว้เพื่อกลับมาแก้ไขภายหลัง"
-              : confirmDialog.type === "SUBMIT"
-                ? "เมื่อส่งแล้วจะไม่สามารถแก้ไขข้อมูลชุดนี้ได้อีก"
-                : "ข้อมูลในรอบการสุ่มนี้จะหายไปทั้งหมด"}
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button
-            onClick={() =>
-              setConfirmDialog({ open: false, type: "", data: null })
+          />
+        </Box>
+        <DialogContent sx={{ p: 2, minHeight: 400 }}>
+          <Stack spacing={1}>
+            {isSearching ? [1, 2, 3].map(i => <Skeleton key={i} variant="rectangular" height={70} sx={{ borderRadius: 2 }} />) :
+              filteredTrucks.map(t => (
+                <Card key={t.id} variant="outlined" sx={{ borderRadius: 2 }}>
+                  <CardActionArea sx={{ p: 2 }} onClick={() => { setSelectedTruck(t); setOpenSearch(false); }}>
+                    <Stack direction="row" justifyContent="space-between">
+                      <Box>
+                        <Typography variant="subtitle2" fontWeight={900}>{t.plate}</Typography>
+                        <Typography variant="caption" color="textSecondary">{t.supplier}</Typography>
+                      </Box>
+                      <Typography variant="caption" fontWeight={900}>{t.time}</Typography>
+                    </Stack>
+                  </CardActionArea>
+                </Card>
+              ))
             }
-            color="inherit"
-          >
-            ยกเลิก
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleActionConfirm}
-            sx={{
-              borderRadius: 2,
-              px: 3,
-              fontWeight: "bold",
-              bgcolor:
-                confirmDialog.type === "SAVE_DRAFT"
-                  ? "#f57f17"
-                  : confirmDialog.type === "DELETE_ROUND"
-                    ? "#d32f2f"
-                    : "#1a237e",
-            }}
-          >
-            ตกลง
-          </Button>
-        </DialogActions>
+          </Stack>
+        </DialogContent>
       </Dialog>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          severity={snackbar.severity}
-          variant="filled"
-          sx={{ borderRadius: 2 }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      {/* Confirm Modal */}
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+        <Box sx={{ p: 3, textAlign: 'center' }}>
+          <HelpIcon sx={{ fontSize: 60, color: THEME_ACCENT, mb: 1 }} />
+          <Typography variant="h6" fontWeight={900}>ยืนยันการส่งข้อมูล?</Typography>
+          <Typography color="textSecondary" sx={{ mb: 3 }}>ข้อมูลจะถูกบันทึกเข้าสู่ระบบของโรงงาน</Typography>
+          <Stack direction="row" spacing={2}>
+            <Button fullWidth onClick={() => setConfirmOpen(false)}>ยกเลิก</Button>
+            <Button fullWidth variant="contained" onClick={handleSubmit} sx={{ bgcolor: THEME_NAVY }}>ยืนยัน</Button>
+          </Stack>
+        </Box>
+      </Dialog>
     </Box>
   );
-}
+};
+
+export default App;
+
+
+
+
+
