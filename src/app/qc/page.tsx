@@ -1,6 +1,6 @@
 "use client";
 
-import QcPineapplePage from "@/src/features/qc/QcPineapplePage";
+import QcPineapplePage from "@/features/qc/QcPineapplePage";
 
 const App: React.FC = () => {
   return <QcPineapplePage />;

@@ -18,134 +18,56 @@ import {
   Chip,
   Button,
   InputBase,
-  Dialog,
-  CircularProgress,
-  Backdrop,
   Fade,
-  Skeleton,
-  CardActionArea,
-  Card,
-  TextField,
-  DialogContent,
-  SelectChangeEvent,
+  TextField
 } from "@mui/material";
 import {
   Add as AddIcon,
   LocalShipping as TruckIcon,
-  Logout as LogoutIcon,
+
   Close as CloseIcon,
   Search as SearchIcon,
-  HelpOutline as HelpIcon,
+
   Layers as LayersIcon,
-  Straighten as StraightenIcon,
-  Grass as GrassIcon,
-  WbSunny as SunIcon,
-  ReportProblem as WarningIcon,
-  Coronavirus as FungusIcon,
-  WaterDrop as WaterDropIcon,
-  Block as BlockIcon,
-  CheckCircle as SuccessIcon,
-  RemoveCircle as WasteIcon,
-  ChangeHistory as DeformedIcon,
-  BugReport as BugIcon,
-  Grain as SeedIcon,
-  Adjust as HollowIcon,
+
 } from "@mui/icons-material";
-import LoadingBackdrop from "@/src/components/LoadingBackdrop";
-import DialogSearch from "@/src/components/DialogSearch";
-import ConfirmDialog from "@/src/components/ConfirmModal";
-import AppHeader from "@/src/components/AppHeader";
-import BottomSummaryBar from "@/src/components/BottomSummaryBar";
-import { ASSESSMENT_CRITERIA, GROUPS, MOCK_TRUCKS, THEME_ACCENT, THEME_BLUE_LIGHT, THEME_GRADIENT, THEME_NAVY } from "./constants";
+import LoadingBackdrop from "@/components/LoadingBackdrop";
+import DialogSearch from "@/components/DialogSearch";
+import ConfirmDialog from "@/components/ConfirmModal";
+import AppHeader from "@/components/AppHeader";
+import BottomSummaryBar from "@/components/BottomSummaryBar";
+import { ASSESSMENT_CRITERIA, GROUPS, THEME_ACCENT, THEME_BLUE_LIGHT, THEME_GRADIENT, THEME_NAVY } from "./constants";
+import { useQcPineapple } from "./useQcPineapple";
+
+
 
 const QcPineapplePage = () => {
-  const [selectedTruck, setSelectedTruck] = useState<TruckQueue | null>(null);
-  const [globalSampleCount, setGlobalSampleCount] = useState<number>(10);
-  const [rounds, setRounds] = useState<Round[]>(() => [
-    { id: Date.now(), name: "R1" },
-  ]);
-  const [values, setValues] = useState<ValuesState>({});
-  const [rowRemarks, setRowRemarks] = useState<RemarksState>({});
-
-  // UI States
-  const [openSearch, setOpenSearch] = useState<boolean>(false);
-  const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [confirmOpen, setConfirmOpen] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  // Filter trucks based on search
-  const filteredTrucks = useMemo(() => {
-    return MOCK_TRUCKS.filter(
-      (t) =>
-        t.plate.includes(searchQuery) ||
-        t.supplier.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  }, [searchQuery]);
-
-  // Simulation for Skeleton Loading
-  useEffect(() => {
-    if (openSearch) {
-      const timer = setTimeout(() => setIsSearching(false), 800);
-      return () => clearTimeout(timer);
-    }
-  }, [openSearch]);
-
-  const handleValueChange = (
-    roundId: number,
-    criteriaId: string,
-    val: string,
-  ) => {
-    setValues((prev) => ({ ...prev, [`${roundId}_${criteriaId}`]: val }));
-  };
-
-  const getNumericValue = (roundId: number, criteriaId: string): number => {
-    const val = values[`${roundId}_${criteriaId}`];
-    return val === "" || val === undefined ? 0 : parseFloat(val) || 0;
-  };
-
-  const getRoundTotalForGroup = (
-    roundId: number,
-    groupName: string,
-  ): number => {
-    return ASSESSMENT_CRITERIA.filter((c) => c.group === groupName).reduce(
-      (sum, c) => sum + getNumericValue(roundId, c.id),
-      0,
-    );
-  };
-
-  const getRowTotal = (criteriaId: string): number => {
-    return rounds.reduce(
-      (sum, r) => sum + getNumericValue(r.id, criteriaId),
-      0,
-    );
-  };
-
-  const targetLimit = globalSampleCount;
-  const totalSamplesOverall = rounds.length * targetLimit;
-
-  const hasValidationError = useMemo(() => {
-    return rounds.some((r) =>
-      GROUPS.some((g) => getRoundTotalForGroup(r.id, g) > targetLimit + 0.001),
-    );
-  }, [rounds, values, targetLimit, getRoundTotalForGroup]);
-
-  const handleSubmit = async () => {
-    setConfirmOpen(false);
-    setIsLoading(true);
-    // Simulate API Call
-    await new Promise((r) => setTimeout(r, 1500));
-    setIsLoading(false);
-    setSelectedTruck(null);
-    setRounds([{ id: Date.now(), name: "R1" }]);
-    setValues({});
-    setSearchQuery("");
-  };
-
-  const handleSampleCountChange = (event: SelectChangeEvent<number>) => {
-    setGlobalSampleCount(Number(event.target.value));
-  };
-
+  const {
+    isLoading,
+    setOpenSearch,
+    selectedTruck,
+    globalSampleCount,
+    handleSampleCountChange,
+    setRounds,
+    rounds,
+    getRoundTotalForGroup,
+    targetLimit,
+    values,
+    handleValueChange,
+    getRowTotal,
+    totalSamplesOverall,
+    rowRemarks,
+    setRowRemarks,
+    hasValidationError,
+    setConfirmOpen,
+    openSearch,
+    searchQuery,
+    setSearchQuery,
+    isSearching,
+    filteredTrucks,
+    setSelectedTruck, confirmOpen,
+    handleSubmit
+  } = useQcPineapple();
   return (
     <Box
       sx={{
@@ -317,7 +239,7 @@ const QcPineapplePage = () => {
               sx={{
                 borderRadius: 4,
                 border: "1px solid #E0E0E0",
-                maxHeight: "calc(100vh - 420px)",
+                // maxHeight: "calc(100vh - 420px)",
                 overflow: "auto",
               }}
             >
@@ -539,9 +461,9 @@ const QcPineapplePage = () => {
                           >
                             {totalSamplesOverall > 0
                               ? (
-                                  (getRowTotal(item.id) / totalSamplesOverall) *
-                                  100
-                                ).toFixed(1)
+                                (getRowTotal(item.id) / totalSamplesOverall) *
+                                100
+                              ).toFixed(1)
                               : "0"}
                             %
                           </TableCell>

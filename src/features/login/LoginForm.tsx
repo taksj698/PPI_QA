@@ -8,11 +8,20 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
 import { LockOutlined as LockIcon } from "@mui/icons-material";
+import { useAuth } from "@/features/login/useAuth";
 
 export default function LoginPage() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const {
+    userName,
+    password,
+    setUserName,
+    setPassword,
+    handleLogin,
+    isLoading,
+    error,
+  } = useAuth();
+
   return (
     <Box
       sx={{
@@ -32,22 +41,42 @@ export default function LoginPage() {
         >
           <LockIcon fontSize="large" />
         </Avatar>
+
         <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>
           QC LOGIN
         </Typography>
-        <Typography variant="body2" color="textSecondary" sx={{ mb: 4 }}>
-          ระบบประเมินคุณภาพสับปะรด (TS)
-        </Typography>
-        <TextField fullWidth label="ชื่อผู้ใช้งาน" sx={{ mb: 2 }} />
-        <TextField fullWidth label="รหัสผ่าน" type="password" sx={{ mb: 3 }} />
+
+        <TextField
+          fullWidth
+          label="ชื่อผู้ใช้งาน"
+          sx={{ mb: 2 }}
+          value={userName}
+          onChange={(e) => setUserName(e.target.value)}
+        />
+
+        <TextField
+          fullWidth
+          label="รหัสผ่าน"
+          type="password"
+          sx={{ mb: 3 }}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        {error && (
+          <Typography color="error" sx={{ mb: 2 }}>
+            {error}
+          </Typography>
+        )}
+
         <Button
           fullWidth
           variant="contained"
           size="large"
-          onClick={() => setIsLoggedIn(true)}
-          sx={{ borderRadius: 3, py: 1.5, fontWeight: "bold" }}
+          onClick={handleLogin}
+          disabled={isLoading}
         >
-          เข้าสู่ระบบ
+          {isLoading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
         </Button>
       </Paper>
     </Box>
