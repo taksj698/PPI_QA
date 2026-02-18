@@ -7,19 +7,20 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
 
   const isLoginPage = request.nextUrl.pathname === "/login";
-
+    console.log("token",token);
   if (!token && !isLoginPage) {
+
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-//   if (token && isLoginPage) {
-//     return NextResponse.redirect(new URL("/qc", request.url));
-//   }
+  //   if (token && isLoginPage) {
+  //     return NextResponse.redirect(new URL("/qc", request.url));
+  //   }
 
   return NextResponse.next();
 }
 
 // 👇 ใส่ตรงนี้
 export const config = {
-  matcher: ["/:path*"],
+  matcher: ["/((?!_next|api|favicon.ico).*)"],
 };
