@@ -38,7 +38,7 @@ import AppHeader from "@/components/AppHeader";
 import BottomSummaryBar from "@/components/BottomSummaryBar";
 import { ASSESSMENT_CRITERIA, GROUPS, THEME_ACCENT, THEME_BLUE_LIGHT, THEME_GRADIENT, THEME_NAVY } from "./constants";
 import { useQcPineapple } from "./useQcPineapple";
-
+import { authService } from "../login/auth.service";
 
 
 const QcPineapplePage = () => {
@@ -85,7 +85,7 @@ const QcPineapplePage = () => {
         title="QC PINEAPPLE (TS)"
         logoText="Q"
         onSearchClick={() => setOpenSearch(true)}
-        onLogout={() => window.location.reload()}
+        onLogout={() => authService.logout()}
       />
 
       {/* Main Content */}

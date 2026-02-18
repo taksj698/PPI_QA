@@ -1,36 +1,183 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Deploy Next.js on Windows Server (Production Guide)
 
-## Getting Started
+This guide explains how to deploy a Next.js application in **Server
+Mode** (without `output: "export"` and with middleware support).
 
-First, run the development server:
+------------------------------------------------------------------------
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## System Requirements
+
+-   Windows Server 2016 / 2019 / 2022
+-   Administrator access
+-   Open required firewall port (example: 4000)
+
+------------------------------------------------------------------------
+
+## 1. Install Node.js (LTS)
+
+Download from: https://nodejs.org
+
+Choose **LTS (Recommended For Most Users)**.
+
+After installation, verify:
+
+``` powershell
+node -v
+npm -v
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+------------------------------------------------------------------------
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 2. Install Yarn
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+``` powershell
+npm install -g yarn
+```
 
-## Learn More
+Verify:
 
-To learn more about Next.js, take a look at the following resources:
+``` powershell
+yarn -v
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+------------------------------------------------------------------------
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 3. Copy Project to Server
 
-## Deploy on Vercel
+Example path:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+    D:\apps\ppi_qa
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Project structure should include:
+
+    .next/
+    public/
+    src/ or app/
+    package.json
+    yarn.lock
+    next.config.ts
+
+------------------------------------------------------------------------
+
+## 4. Install Dependencies
+
+``` powershell
+cd D:\apps\ppi_qa
+yarn install
+```
+
+------------------------------------------------------------------------
+
+## 5. Build Project
+
+``` powershell
+yarn build
+```
+
+------------------------------------------------------------------------
+
+## 6. Configure Port
+
+Edit package.json:
+
+``` json
+"scripts": {
+  "start": "next start -p 4000"
+}
+```
+
+------------------------------------------------------------------------
+
+## 7. Run Application
+
+``` powershell
+yarn start
+```
+
+Access via:
+
+    http://server-ip:4000
+
+------------------------------------------------------------------------
+
+## 8. Run in Background (Recommended for Production)
+
+### Install PM2
+
+``` powershell
+npm install -g pm2
+```
+
+### Start Application
+
+``` powershell
+pm2 start npm --name "ppi-qa" -- start
+```
+
+### Enable Auto-Start After Reboot
+
+``` powershell
+pm2 save
+pm2 startup
+```
+
+Follow the generated command instructions.
+
+### Check Status
+
+``` powershell
+pm2 list
+```
+
+### View Logs
+
+``` powershell
+pm2 logs
+```
+
+------------------------------------------------------------------------
+
+## 9. Deploy Updates
+
+When deploying new code:
+
+``` powershell
+yarn install
+yarn build
+pm2 reload ppi-qa
+```
+
+------------------------------------------------------------------------
+
+## Optional: Use IIS Reverse Proxy
+
+Install: - URL Rewrite Module - Application Request Routing (ARR)
+
+Enable Proxy in IIS.
+
+Example web.config:
+
+``` xml
+<configuration>
+  <system.webServer>
+    <rewrite>
+      <rules>
+        <rule name="ReverseProxy" stopProcessing="true">
+          <match url="(.*)" />
+          <action type="Rewrite" url="http://localhost:4000/{R:1}" />
+        </rule>
+      </rules>
+    </rewrite>
+  </system.webServer>
+</configuration>
+```
+
+------------------------------------------------------------------------
+
+## Production Architecture
+
+User → (IIS Optional) → PM2 → Next.js
+
+-   Middleware supported
+-   Authentication supported
+-   Suitable for internal production systems
