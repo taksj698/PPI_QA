@@ -39,6 +39,7 @@ import BottomSummaryBar from "@/components/BottomSummaryBar";
 import { ASSESSMENT_CRITERIA, GROUPS, THEME_ACCENT, THEME_BLUE_LIGHT, THEME_GRADIENT, THEME_NAVY } from "./constants";
 import { useQcPineapple } from "./useQcPineapple";
 import { authService } from "../login/auth.service";
+import { QcCheck } from "@/types/qcCheck.type";
 
 
 const QcPineapplePage = () => {
@@ -167,7 +168,7 @@ const QcPineapplePage = () => {
                     color={THEME_NAVY}
                     sx={{ lineHeight: 1.2 }}
                   >
-                    {selectedTruck.plate} — {selectedTruck.supplier}
+                    {/* เติม {selectedTruck.plate} — {selectedTruck.supplier} */}
                   </Typography>
                 </Box>
               </Stack>
@@ -513,8 +514,8 @@ const QcPineapplePage = () => {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         isSearching={isSearching}
-        trucks={filteredTrucks}
-        onSelectTruck={(truck) => setSelectedTruck(truck as TruckQueue)}
+        // trucks={filteredTrucks}
+        onSelectTruck={(truck) => setSelectedTruck(truck as QcCheck)}
       />
 
       {/* Confirm Modal */}

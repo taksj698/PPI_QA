@@ -1,11 +1,12 @@
 import { SelectChangeEvent } from "@mui/material";
 import { ASSESSMENT_CRITERIA, GROUPS, MOCK_TRUCKS } from "./constants";
 import { useEffect, useMemo, useState } from "react";
+import { QcCheck } from "@/types/qcCheck.type";
 
 
 
 export const useQcPineapple = () => {
-    const [selectedTruck, setSelectedTruck] = useState<TruckQueue | null>(null);
+    const [selectedTruck, setSelectedTruck] = useState<QcCheck | null>(null);
     const [globalSampleCount, setGlobalSampleCount] = useState<number>(10);
     const [rounds, setRounds] = useState<Round[]>(() => [
         { id: Date.now(), name: "R1" },
@@ -30,12 +31,12 @@ export const useQcPineapple = () => {
     }, [searchQuery]);
 
     // Simulation for Skeleton Loading
-    useEffect(() => {
-        if (openSearch) {
-            const timer = setTimeout(() => setIsSearching(false), 800);
-            return () => clearTimeout(timer);
-        }
-    }, [openSearch]);
+    // useEffect(() => {
+    //     if (openSearch) {
+    //         const timer = setTimeout(() => setIsSearching(false), 2000);
+    //         return () => clearTimeout(timer);
+    //     }
+    // }, [openSearch]);
 
     const handleValueChange = (
         roundId: number,

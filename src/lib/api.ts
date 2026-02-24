@@ -1,4 +1,5 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
+import Cookies from "js-cookie";
 import { ENV } from "@/config/env";
 
 const api = axios.create({
@@ -15,7 +16,7 @@ api.interceptors.request.use(
     console.log("ENV URL:", process.env.NEXT_PUBLIC_API_URL);
     console.log(`${ENV.API_URL}${ENV.API_PREFIX}`)
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
+      const token = Cookies.get("token");
 
       if (token) {
         config.headers.set("Authorization", `Bearer ${token}`);
@@ -33,7 +34,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // token หมดอายุ
       if (typeof window !== "undefined") {
-        localStorage.removeItem("token");
+        Cookies.remove("token");
         window.location.href = "/login";
       }
     }
