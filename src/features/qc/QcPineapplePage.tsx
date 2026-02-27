@@ -40,6 +40,7 @@ import { ASSESSMENT_CRITERIA, GROUPS, THEME_ACCENT, THEME_BLUE_LIGHT, THEME_GRAD
 import { useQcPineapple } from "./useQcPineapple";
 import { authService } from "../login/auth.service";
 import { QcCheck } from "@/types/qcCheck.type";
+import { group } from "console";
 
 
 const QcPineapplePage = () => {
@@ -47,6 +48,7 @@ const QcPineapplePage = () => {
     isLoading,
     setOpenSearch,
     selectedTruck,
+    buildQualityPayload,
     globalSampleCount,
     handleSampleCountChange,
     setRounds,
@@ -65,7 +67,7 @@ const QcPineapplePage = () => {
     searchQuery,
     setSearchQuery,
     isSearching,
-    filteredTrucks,
+    // filteredTrucks,
     setSelectedTruck, confirmOpen,
     handleSubmit
   } = useQcPineapple();
@@ -203,7 +205,7 @@ const QcPineapplePage = () => {
                       ml: 0.5,
                     }}
                   >
-                    {[5, 10, 15, 20].map((val) => (
+                    {[5].map((val) => (
                       <MenuItem key={val} value={val}>
                         {val} ลูก
                       </MenuItem>
@@ -415,13 +417,14 @@ const QcPineapplePage = () => {
                                   autoComplete="off"
                                   type="number"
                                   value={currentVal}
-                                  onChange={(e) =>
+                                  onChange={(e) => {
                                     handleValueChange(
+                                      groupName,
                                       r.id,
                                       item.id,
                                       e.target.value,
-                                    )
-                                  }
+                                    );
+                                  }}
                                   error={isOver}
                                   inputProps={{
                                     style: {
@@ -501,6 +504,13 @@ const QcPineapplePage = () => {
         hasValidationError={hasValidationError}
         onSaveDraft={() => {
           // logic save draft
+          console.log("selectedTruck:", selectedTruck);
+          console.log("rounds:", rounds);
+          console.log("values:", values);
+          console.log("remarks:", rowRemarks);
+          const payload = buildQualityPayload();
+          console.log("API PAYLOAD:", payload);
+
         }}
         onSubmit={() => setConfirmOpen(true)}
         accentColor={THEME_ACCENT}
@@ -511,9 +521,9 @@ const QcPineapplePage = () => {
       <DialogSearch
         open={openSearch}
         onClose={() => setOpenSearch(false)}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        isSearching={isSearching}
+        // searchQuery={searchQuery}
+        // onSearchChange={setSearchQuery}
+        // isSearching={isSearching}
         // trucks={filteredTrucks}
         onSelectTruck={(truck) => setSelectedTruck(truck as QcCheck)}
       />

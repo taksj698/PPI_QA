@@ -163,45 +163,45 @@ export const  ASSESSMENT_CRITERIA: AssessmentCriteria[] = [
 
 export const  GROUPS: string[] = ["ขนาด", "ความสุก", "ตำหนิ", "สรุปจำนวนลูก (รวม)"];
 
-export const  MOCK_TRUCKS: TruckQueue[] = [
-  {
-    id: "T001",
-    plate: "82-6989",
-    supplier: "สวนกำนันเปี๊ยก",
-    time: "08:30",
-    weight: "9.5 ตัน",
-    type: "6 ล้อ",
-  },
-  {
-    id: "T002",
-    plate: "70-1234",
-    supplier: "ไร่รวมทรัพย์",
-    time: "09:15",
-    weight: "12.0 ตัน",
-    type: "10 ล้อ",
-  },
-  {
-    id: "T003",
-    plate: "ผก-555",
-    supplier: "เกษตรเจริญผล",
-    time: "10:00",
-    weight: "4.2 ตัน",
-    type: "กระบะ",
-  },
-  {
-    id: "T004",
-    plate: "บพ-888",
-    supplier: "สวนนายเก่ง",
-    time: "10:30",
-    weight: "8.8 ตัน",
-    type: "6 ล้อ",
-  },
-  {
-    id: "T005",
-    plate: "กข-111",
-    supplier: "ไร่แสงจันทร์",
-    time: "11:00",
-    weight: "10.2 ตัน",
-    type: "10 ล้อ",
-  },
-];
+// export const  MOCK_TRUCKS: TruckQueue[] = [
+//   {
+//     id: "T001",
+//     plate: "82-6989",
+//     supplier: "สวนกำนันเปี๊ยก",
+//     time: "08:30",
+//     weight: "9.5 ตัน",
+//     type: "6 ล้อ",
+//   },
+//   {
+//     id: "T002",
+//     plate: "70-1234",
+//     supplier: "ไร่รวมทรัพย์",
+//     time: "09:15",
+//     weight: "12.0 ตัน",
+//     type: "10 ล้อ",
+//   },
+//   {
+//     id: "T003",
+//     plate: "ผก-555",
+//     supplier: "เกษตรเจริญผล",
+//     time: "10:00",
+//     weight: "4.2 ตัน",
+//     type: "กระบะ",
+//   },
+//   {
+//     id: "T004",
+//     plate: "บพ-888",
+//     supplier: "สวนนายเก่ง",
+//     time: "10:30",
+//     weight: "8.8 ตัน",
+//     type: "6 ล้อ",
+//   },
+//   {
+//     id: "T005",
+//     plate: "กข-111",
+//     supplier: "ไร่แสงจันทร์",
+//     time: "11:00",
+//     weight: "10.2 ตัน",
+//     type: "10 ล้อ",
+//   },
+// ];

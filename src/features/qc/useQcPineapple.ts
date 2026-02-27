@@ -1,7 +1,8 @@
 import { SelectChangeEvent } from "@mui/material";
-import { ASSESSMENT_CRITERIA, GROUPS, MOCK_TRUCKS } from "./constants";
+import { ASSESSMENT_CRITERIA, GROUPS } from "./constants"; //, MOCK_TRUCKS
 import { useEffect, useMemo, useState } from "react";
 import { QcCheck } from "@/types/qcCheck.type";
+import { group } from "console";
 
 
 
@@ -22,13 +23,13 @@ export const useQcPineapple = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     // Filter trucks based on search
-    const filteredTrucks = useMemo(() => {
-        return MOCK_TRUCKS.filter(
-            (t) =>
-                t.plate.includes(searchQuery) ||
-                t.supplier.toLowerCase().includes(searchQuery.toLowerCase()),
-        );
-    }, [searchQuery]);
+    // const filteredTrucks = useMemo(() => {
+    //     return MOCK_TRUCKS.filter(
+    //         (t) =>
+    //             t.plate.includes(searchQuery) ||
+    //             t.supplier.toLowerCase().includes(searchQuery.toLowerCase()),
+    //     );
+    // }, [searchQuery]);
 
     // Simulation for Skeleton Loading
     // useEffect(() => {
@@ -38,11 +39,54 @@ export const useQcPineapple = () => {
     //     }
     // }, [openSearch]);
 
+    // useEffect(() => {
+    //     initMockDraft();
+    // }, []);
+
+
+    // //fortest
+    // const initMockDraft = () => {
+    //     const mockRoundId = Date.now();
+
+    //     // set truck
+    //     setSelectedTruck({
+    //         id: 1,
+    //         plate: "1กก-1234",
+    //         supplier: "Supplier Test"
+    //     } as any);
+
+    //     // set rounds
+    //     setRounds([
+    //         { id: mockRoundId, name: "R1" },
+    //         { id: mockRoundId + 1, name: "R2" }
+    //     ]);
+
+    //     // set values (ต้องใช้ key แบบ roundId_criteriaId)
+    //     const newValues: Record<string, string> = {};
+
+    //     ASSESSMENT_CRITERIA.forEach((c) => {
+    //         newValues[`${mockRoundId}_${c.id}`] = "1";
+    //         newValues[`${mockRoundId + 1}_${c.id}`] = "2";
+    //     });
+
+    //     setValues(newValues);
+
+    //     // set remarks
+    //     const newRemarks: Record<string, string> = {};
+    //     ASSESSMENT_CRITERIA.forEach((c) => {
+    //         newRemarks[c.id] = "ทดสอบหมายเหตุ";
+    //     });
+
+    //     setRowRemarks(newRemarks);
+    // };
+
     const handleValueChange = (
+        groupName: string,
         roundId: number,
         criteriaId: string,
         val: string,
     ) => {
+        console.log(`handleValueChange: group=${groupName}, roundId=${roundId}, criteriaId=${criteriaId}, val=${val}`);
         setValues((prev) => ({ ...prev, [`${roundId}_${criteriaId}`]: val }));
     };
 
@@ -94,6 +138,74 @@ export const useQcPineapple = () => {
     };
 
 
+    const buildQualityPayload = () => {
+        const details: any[] = [];
+
+        rounds.forEach((round, roundIndex) => {
+            const rIndex = roundIndex + 1;
+
+            // DETAIL (แต่ละช่อง)
+            ASSESSMENT_CRITERIA.forEach((c, colIndex) => {
+                const cIndex = colIndex + 1;
+                const value = getNumericValue(round.id, c.id);
+
+                details.push({
+                    qualityRuleCode: `SIZE_DETAIL_R${rIndex}_C${cIndex}`,
+                    dimensionType: "DETAIL",
+                    dimensionCode: `DETAIL_R${rIndex}_C${cIndex}`,
+                    dimensionValue: value,
+                    dimensionUnit: "EACH",
+                    remarkText: rowRemarks[c.id] || null
+                });
+            });
+
+            // TOTAL ต่อรอบ
+            const total = ASSESSMENT_CRITERIA.reduce(
+                (sum, c) => sum + getNumericValue(round.id, c.id),
+                0
+            );
+
+            details.push({
+                qualityRuleCode: `SIZE_TOTAL${rIndex}`,
+                dimensionType: "TOTAL",
+                dimensionCode: `TOTAL${rIndex}`,
+                dimensionValue: total,
+                dimensionUnit: "EACH",
+                remarkText: null
+            });
+
+            // AVG (%)
+            const avg =
+                totalSamplesOverall > 0
+                    ? (total / totalSamplesOverall) * 100
+                    : 0;
+
+            details.push({
+                qualityRuleCode: `SIZE_AVG${rIndex}`,
+                dimensionType: "AVG",
+                dimensionCode: `AVG${rIndex}`,
+                dimensionValue: Number(avg.toFixed(2)),
+                dimensionUnit: "PERCENT",
+                remarkText: null
+            });
+        });
+
+        return {
+            qualityId: 0,
+            qualityCode: "QC_SIZE_20260101_001",
+            qualityType: "SIZE",
+            planCode: "SIZE_20260101001",
+            refDocType: "WEIGHTDATA",
+            refDocId: "WD202601010001",
+            inspectorDateTime: new Date().toISOString(),
+            inspectorBy: 1001,
+            status: "PENDING",
+            remark: "Size check before pricing",
+            tbQualityDetails: details
+        };
+    };
+
+
     return {
         // states
         selectedTruck,
@@ -106,7 +218,7 @@ export const useQcPineapple = () => {
         searchQuery,
         confirmOpen,
         isLoading,
-        filteredTrucks,
+        // filteredTrucks,
         hasValidationError,
         targetLimit,
         totalSamplesOverall,
@@ -119,7 +231,7 @@ export const useQcPineapple = () => {
         setOpenSearch,
         setSearchQuery,
         setConfirmOpen,
-
+        buildQualityPayload,
         // functions
         handleValueChange,
         getRowTotal,

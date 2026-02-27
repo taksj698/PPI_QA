@@ -22,7 +22,7 @@ import { qcService } from "@/services/qc.service";
 import { QcCheck, QcCheckResponse } from "@/types/qcCheck.type";
 import ScaleIcon from "@mui/icons-material/Scale";
 import { formatDateTime } from "@/utils/date";
-
+import { InputAdornment } from "@mui/material";
 export type Truck = {
   id: string | number;
   plate: string;
@@ -33,9 +33,8 @@ export type Truck = {
 type TruckSearchDialogProps = {
   open: boolean;
   onClose: () => void;
-  searchQuery: string;
-  onSearchChange: (value: string) => void;
-  isSearching: boolean;
+  // searchQuery: string;
+  // onSearchChange: (value: string) => void;
   // trucks: Truck[];
   onSelectTruck: (truck: QcCheck) => void;
   themeColor?: string;
@@ -44,15 +43,14 @@ type TruckSearchDialogProps = {
 export default function TruckSearchDialog({
   open,
   onClose,
-  searchQuery,
-  onSearchChange,
-  isSearching,
+  // onSearchChange,
   // trucks,
   onSelectTruck,
   themeColor = "#0B1C2D",
 }: TruckSearchDialogProps) {
 
   const [trucks, setTrucks] = useState<QcCheck[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     if (open) {
@@ -71,6 +69,15 @@ export default function TruckSearchDialog({
         });
     }
   }, [open]);
+  const filteredTrucks = React.useMemo(() => {
+    return trucks.filter((t) =>
+      `${t.plate ?? ""} ${t.companyName ?? ""} ${t.truckTypeName ?? ""}`
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
+    );
+  }, [trucks, searchQuery]);
+
+
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" slotProps={{
@@ -93,10 +100,18 @@ export default function TruckSearchDialog({
           placeholder="ค้นหา ทะเบียน, ลูกค้า..."
           size="small"
           value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          InputProps={{
-            startAdornment: <SearchIcon sx={{ color: "white", mr: 1 }} />,
-            sx: {
+          onChange={(e) => setSearchQuery(e.target.value)}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: "white" }} />
+                </InputAdornment>
+              ),
+            },
+          }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
               bgcolor: "rgba(255,255,255,0.1)",
               color: "white",
               borderRadius: 2,
@@ -112,8 +127,8 @@ export default function TruckSearchDialog({
             [1, 2, 3, 4].map((i) => (
               <Skeleton key={i} variant="rectangular" height={120} sx={{ borderRadius: 2 }} />
             ))
-          ) : trucks.length > 0 ? (
-            trucks.map((t) => (
+          ) : filteredTrucks.length > 0 ? (
+            filteredTrucks.map((t) => (
               <Card
                 key={t.logid}
                 elevation={0}
@@ -146,7 +161,7 @@ export default function TruckSearchDialog({
                       </Stack>
 
                       <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ pl: 3.5 }}>
-                        {t.customerName}
+                        {t.companyName}
                       </Typography>
                     </Stack>
 

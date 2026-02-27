@@ -11,7 +11,7 @@ export interface QcCheck {
     grossWeight: number | null;
     qcState: boolean | null;
     truckTypeName: string | null;
-    customerName: string | null;
+    companyName: string | null;
 }
 
 export type QcCheckResponse = ApiResponse<QcCheck>;

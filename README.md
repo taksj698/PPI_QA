@@ -111,6 +111,7 @@ npm install -g pm2
 ### Start Application
 
 ``` powershell
+pm2 start node_modules/next/dist/bin/next --name "ppi-qa" -- start -p 9001 -H 0.0.0.0
 pm2 start npm --name "ppi-qa" -- start
 ```
 

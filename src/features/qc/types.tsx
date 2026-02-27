@@ -20,6 +20,8 @@ interface Round {
 }
 
 interface ValuesState {
+  // groupName: string;
+  // roundId: number;
   [key: string]: string;
 }
 
