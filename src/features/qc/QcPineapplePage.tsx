@@ -36,7 +36,7 @@ import DialogSearch from "@/components/DialogSearch";
 import ConfirmDialog from "@/components/ConfirmModal";
 import AppHeader from "@/components/AppHeader";
 import BottomSummaryBar from "@/components/BottomSummaryBar";
-import { ASSESSMENT_CRITERIA, GROUPS, THEME_ACCENT, THEME_BLUE_LIGHT, THEME_GRADIENT, THEME_NAVY } from "./constants";
+import { ASSESSMENT_CRITERIA, GROUP_QA, THEME_ACCENT, THEME_BLUE_LIGHT, THEME_GRADIENT, THEME_NAVY } from "./constants";
 import { useQcPineapple } from "./useQcPineapple";
 import { authService } from "../login/auth.service";
 import { QcCheck } from "@/types/qcCheck.type";
@@ -324,12 +324,12 @@ const QcPineapplePage = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {GROUPS.map((groupName) => (
-                    <React.Fragment key={groupName}>
+                  {GROUP_QA.map((groupName) => (
+                    <React.Fragment key={groupName.group}>
                       <TableRow>
                         <TableCell
                           sx={{
-                            bgcolor: groupName.includes("สรุป")
+                            bgcolor: groupName.name.includes("สรุป")
                               ? "#E8F5E9"
                               : "#F5F5F5",
                             py: 1,
@@ -343,18 +343,18 @@ const QcPineapplePage = () => {
                             variant="caption"
                             sx={{
                               fontWeight: 900,
-                              color: groupName.includes("สรุป")
+                              color: groupName.name.includes("สรุป")
                                 ? "#1B5E20"
                                 : "#666",
                             }}
                           >
-                            {groupName}
+                            {groupName.name}
                           </Typography>
                         </TableCell>
                         <TableCell
                           colSpan={rounds.length + 3}
                           sx={{
-                            bgcolor: groupName.includes("สรุป")
+                            bgcolor: groupName.name.includes("สรุป")
                               ? "#E8F5E9"
                               : "#F5F5F5",
                             py: 1,
@@ -363,7 +363,7 @@ const QcPineapplePage = () => {
                       </TableRow>
 
                       {ASSESSMENT_CRITERIA.filter(
-                        (c) => c.group === groupName,
+                        (c) => c.group === groupName.group,
                       ).map((item) => (
                         <TableRow key={item.id} hover>
                           <TableCell
@@ -390,7 +390,7 @@ const QcPineapplePage = () => {
                               <Typography
                                 variant="body2"
                                 sx={{
-                                  fontWeight: groupName.includes("สรุป")
+                                  fontWeight: groupName.name.includes("สรุป")
                                     ? 800
                                     : 500,
                                 }}
@@ -403,7 +403,7 @@ const QcPineapplePage = () => {
                           {rounds.map((r) => {
                             const groupSum = getRoundTotalForGroup(
                               r.id,
-                              groupName,
+                              groupName.group,
                             );
                             const isOver = groupSum > targetLimit + 0.001;
                             const currentVal =
@@ -419,7 +419,7 @@ const QcPineapplePage = () => {
                                   value={currentVal}
                                   onChange={(e) => {
                                     handleValueChange(
-                                      groupName,
+                                      groupName.group,
                                       r.id,
                                       item.id,
                                       e.target.value,

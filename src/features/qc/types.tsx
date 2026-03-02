@@ -5,6 +5,11 @@ interface AssessmentCriteria {
   icon: React.ReactNode;
 }
 
+interface GroupQA {
+  group: string;
+  name: string;
+}
+
 interface TruckQueue {
   id: string;
   plate: string;

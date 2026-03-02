@@ -1,5 +1,5 @@
 import { SelectChangeEvent } from "@mui/material";
-import { ASSESSMENT_CRITERIA, GROUPS } from "./constants"; //, MOCK_TRUCKS
+import { ASSESSMENT_CRITERIA, GROUP_QA } from "./constants"; //, MOCK_TRUCKS
 import { useEffect, useMemo, useState } from "react";
 import { QcCheck } from "@/types/qcCheck.type";
 import { group } from "console";
@@ -117,7 +117,7 @@ export const useQcPineapple = () => {
 
     const hasValidationError = useMemo(() => {
         return rounds.some((r) =>
-            GROUPS.some((g) => getRoundTotalForGroup(r.id, g) > targetLimit + 0.001),
+            GROUP_QA.some((g) => getRoundTotalForGroup(r.id, g.group) > targetLimit + 0.001),
         );
     }, [rounds, values, targetLimit, getRoundTotalForGroup]);
 
