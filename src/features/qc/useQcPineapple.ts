@@ -10,7 +10,7 @@ export const useQcPineapple = () => {
     const [selectedTruck, setSelectedTruck] = useState<QcCheck | null>(null);
     const [globalSampleCount, setGlobalSampleCount] = useState<number>(10);
     const [rounds, setRounds] = useState<Round[]>(() => [
-        { id: Date.now(), name: "R1" },
+        { id: 1, name: "R1" },
     ]);
     const [values, setValues] = useState<ValuesState>({});
     const [rowRemarks, setRowRemarks] = useState<RemarksState>({});
@@ -128,7 +128,7 @@ export const useQcPineapple = () => {
         await new Promise((r) => setTimeout(r, 1500));
         setIsLoading(false);
         setSelectedTruck(null);
-        setRounds([{ id: Date.now(), name: "R1" }]);
+        setRounds([{ id: 1, name: "R1" }]);
         setValues({});
         setSearchQuery("");
     };
@@ -137,6 +137,36 @@ export const useQcPineapple = () => {
         setGlobalSampleCount(Number(event.target.value));
     };
 
+    const handleAddRound = () => {
+        setRounds((prev) => {
+            const nextId = prev.length + 1;
+
+            return [
+                ...prev,
+                {
+                    id: nextId,
+                    name: `R${nextId}`,
+                },
+            ];
+        });
+    };
+    const handleRemoveRound = (id: number) => {
+        setRounds((prevRounds) => {
+            const filtered = prevRounds.filter((r) => r.id !== id);
+
+            const reIndexed = filtered.map((r, index) => ({
+                id: index + 1,
+                name: `R${index + 1}`,
+            }));
+
+            return reIndexed;
+        });
+
+        // 👇 ลบค่าที่ผูกกับ round นี้ออกด้วย
+        // setValues((prevValues) =>
+        //     prevValues.filter((v) => v. !== id)
+        // );
+    };
 
     const buildQualityPayload = () => {
         const details: any[] = [];
@@ -237,7 +267,9 @@ export const useQcPineapple = () => {
         getRowTotal,
         getRoundTotalForGroup,
         handleSubmit,
-        handleSampleCountChange
+        handleSampleCountChange,
+        handleAddRound,
+        handleRemoveRound,
     };
 
 }

@@ -19,15 +19,17 @@ import {
   Button,
   InputBase,
   Fade,
-  TextField
+  TextField,
+  Divider
 } from "@mui/material";
 import {
   Add as AddIcon,
   LocalShipping as TruckIcon,
-
+  Business as BusinessIcon,
+  AccessTime as TimeIcon,
   Close as CloseIcon,
   Search as SearchIcon,
-
+  ConfirmationNumber as TicketIcon,
   Layers as LayersIcon,
 
 } from "@mui/icons-material";
@@ -41,6 +43,7 @@ import { useQcPineapple } from "./useQcPineapple";
 import { authService } from "../login/auth.service";
 import { QcCheck } from "@/types/qcCheck.type";
 import { group } from "console";
+import { formatDateTime } from "@/utils/date";
 
 
 const QcPineapplePage = () => {
@@ -69,8 +72,13 @@ const QcPineapplePage = () => {
     isSearching,
     // filteredTrucks,
     setSelectedTruck, confirmOpen,
-    handleSubmit
+    handleSubmit,
+    handleAddRound,
+    handleRemoveRound,
   } = useQcPineapple();
+
+
+
   return (
     <Box
       sx={{
@@ -126,114 +134,87 @@ const QcPineapplePage = () => {
           </Fade>
         ) : (
           <>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                borderRadius: 4,
-                border: "1px solid #E0E0E0",
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "center",
-                gap: 2,
-                mb: 2,
-                bgcolor: "white",
-              }}
-            >
-              <Stack
-                direction="row"
-                spacing={2}
-                alignItems="center"
-                sx={{ flexGrow: 1, minWidth: 250 }}
-              >
-                <Avatar
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    bgcolor: THEME_BLUE_LIGHT,
-                    color: THEME_ACCENT,
-                  }}
-                >
-                  <TruckIcon />
-                </Avatar>
-                <Box>
-                  <Typography
-                    variant="caption"
-                    color="textSecondary"
-                    fontWeight={700}
-                  >
-                    ทะเบียน / ผู้ส่ง
-                  </Typography>
-                  <Typography
-                    variant="subtitle1"
-                    fontWeight={900}
-                    color={THEME_NAVY}
-                    sx={{ lineHeight: 1.2 }}
-                  >
-                    {/* เติม {selectedTruck.plate} — {selectedTruck.supplier} */}
-                  </Typography>
-                </Box>
-              </Stack>
+            <Paper elevation={0} sx={{ p: 2, borderRadius: 4, border: '1px solid #E0E0E0', mb: 2, bgcolor: 'white' }}>
+              <Stack direction={{ xs: 'column', lg: 'row' }} spacing={3} divider={<Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', lg: 'block' } }} />}>
 
-              <Stack
-                direction="row"
-                spacing={2}
-                alignItems="center"
-                sx={{ minWidth: 180 }}
-              >
-                <Box sx={{ p: 1, bgcolor: "#FFF3E0", borderRadius: 2 }}>
-                  <LayersIcon sx={{ color: "#EF6C00" }} />
-                </Box>
-                <Box>
-                  <Typography
-                    variant="caption"
-                    color="textSecondary"
-                    fontWeight={700}
-                  >
-                    สุ่มรอบละ (ลูก)
-                  </Typography>
-                  <Select
-                    size="small"
-                    value={globalSampleCount}
-                    onChange={handleSampleCountChange}
-                    variant="standard"
-                    disableUnderline
-                    sx={{
-                      fontWeight: 900,
-                      color: "#EF6C00",
-                      fontSize: "1.1rem",
-                      ml: 0.5,
-                    }}
-                  >
-                    {[5].map((val) => (
-                      <MenuItem key={val} value={val}>
-                        {val} ลูก
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </Box>
-              </Stack>
+                {/* Truck & Ticket Info */}
+                <Stack direction="row" spacing={2} alignItems="center" sx={{ flexGrow: 1 }}>
+                  <Avatar sx={{ width: 56, height: 56, bgcolor: THEME_BLUE_LIGHT, color: THEME_ACCENT }}>
+                    <TruckIcon fontSize="large" />
+                  </Avatar>
+                  <Box>
+                    <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
+                      <Typography variant="h6" fontWeight={900} color={THEME_NAVY}>{selectedTruck.plate}</Typography>
+                      <Chip label={selectedTruck.truckTypeName} size="small" sx={{ fontWeight: 700, bgcolor: '#E8EAF6' }} />
+                    </Stack>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <TicketIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                      <Typography variant="body2" color="textSecondary" fontWeight={700}>{selectedTruck.ticketOutCode}</Typography>
+                    </Stack>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <BusinessIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                      <Typography variant="body2" color="textSecondary" noWrap>{selectedTruck.companyName}</Typography>
+                    </Stack>
+                  </Box>
+                </Stack>
 
-              <Button
-                variant="outlined"
-                startIcon={<AddIcon />}
-                onClick={() =>
-                  setRounds([
-                    ...rounds,
-                    { id: Date.now(), name: `R${rounds.length + 1}` },
-                  ])
-                }
-                sx={{
-                  borderRadius: 3,
-                  fontWeight: 800,
-                  px: 3,
-                  height: 45,
-                  borderColor: THEME_ACCENT,
-                  color: THEME_ACCENT,
-                }}
-              >
-                เพิ่มรอบตรวจ
-              </Button>
+                {/* Weight Info */}
+                <Stack direction="row" spacing={3} alignItems="center">
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" color="textSecondary" fontWeight={800} display="block">น้ำหนักสุทธิ</Typography>
+                    <Typography variant="h5" fontWeight={900} color="#2E7D32">{selectedTruck.grossWeight} <Typography component="span" variant="body2">กิโลกรัม</Typography></Typography>
+                  </Box>
+                  <Box sx={{ bgcolor: '#F5F5F5', p: 1, borderRadius: 2 }}>
+                    <Stack direction="row" spacing={2}>
+                      <Box>
+                        <Typography variant="caption" color="textSecondary" display="block">เข้า</Typography>
+                        <Typography variant="body2" fontWeight={800}>{selectedTruck.inboundWeight} kg</Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" color="textSecondary" display="block">ออก</Typography>
+                        <Typography variant="body2" fontWeight={800}>{selectedTruck.outboundWeight} kg</Typography>
+                      </Box>
+                    </Stack>
+                  </Box>
+                </Stack>
+
+                {/* Time & QC Setup */}
+                <Stack direction="row" spacing={3} alignItems="center">
+                  <Box>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <TimeIcon sx={{ fontSize: 16, color: '#FF9800' }} />
+                      <Typography variant="caption" fontWeight={800}>
+                        เวลาเข้า: {selectedTruck.inboundDate
+                          ? formatDateTime(selectedTruck.inboundDate)
+                          : "-"}
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <LayersIcon sx={{ fontSize: 16, color: '#EF6C00' }} />
+                      <Typography variant="caption" fontWeight={800} color="#EF6C00">สุ่มรอบละ :</Typography>
+                      <Select
+                        size="small"
+                        value={globalSampleCount}
+                        onChange={handleSampleCountChange}
+                        variant="standard"
+                        disableUnderline
+                        sx={{ fontWeight: 900, color: '#EF6C00', fontSize: '0.875rem' }}
+                      >
+                        {[5, 10, 15, 20].map(val => (
+                          <MenuItem key={val} value={val}>{val} ลูก</MenuItem>
+                        ))}
+                      </Select>
+                    </Stack>
+                  </Box>
+                  <Button
+                    variant="contained" startIcon={<AddIcon />}
+                    onClick={handleAddRound}
+                    sx={{ borderRadius: 3, fontWeight: 800, height: 45, bgcolor: THEME_ACCENT, boxShadow: 'none' }}
+                  >
+                    เพิ่มรอบ
+                  </Button>
+                </Stack>
+              </Stack>
             </Paper>
 
             <TableContainer
@@ -287,9 +268,7 @@ const QcPineapplePage = () => {
                           {rounds.length > 1 && (
                             <IconButton
                               size="small"
-                              onClick={() =>
-                                setRounds(rounds.filter((rd) => rd.id !== r.id))
-                              }
+                              onClick={() => handleRemoveRound(r.id)}
                               sx={{ p: 0 }}
                             >
                               <CloseIcon sx={{ fontSize: 14 }} color="error" />
@@ -525,7 +504,7 @@ const QcPineapplePage = () => {
         // onSearchChange={setSearchQuery}
         // isSearching={isSearching}
         // trucks={filteredTrucks}
-        onSelectTruck={(truck) => setSelectedTruck(truck as QcCheck)}
+        onSelectTruck={(truck) => { setSelectedTruck(truck as QcCheck); console.log("Selected Truck:", truck); }}
       />
 
       {/* Confirm Modal */}
