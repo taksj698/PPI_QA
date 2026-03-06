@@ -3,8 +3,8 @@
 import * as React from 'react';
 import { ThemeProvider, CssBaseline, createTheme } from '@mui/material';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
-
-const theme = createTheme();
+import theme from "@/theme/theme";
+// const theme = createTheme();
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (

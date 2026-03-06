@@ -52,23 +52,30 @@ export default function TruckSearchDialog({
   const [trucks, setTrucks] = useState<QcCheck[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  useEffect(() => {
-    if (open) {
+useEffect(() => {
+  if (!open) return;
+
+  const fetchQcCheck = async () => {
+    try {
       setLoading(true);
-      qcService.getQcCheck().then((data: QcCheckResponse) => {
-        if (data.isSuccess) {
-          // ensure data.data is an array of QcCheck
-          const fetched = Array.isArray(data.data) ? data.data : [data.data];
-          setTrucks(fetched);
-        }
-      }).catch((error) => {
-        console.error("Error fetching QC Check:", error);
-      })
-        .finally(() => {
-          setLoading(false);
-        });
+
+      const data: QcCheckResponse = await qcService.getQcCheck();
+
+      if (data.isSuccess) {
+        const fetched = Array.isArray(data.data) ? data.data : [data.data];
+        setTrucks(fetched);
+      }
+    } catch (error) {
+      console.error("Error fetching QC Check:", error);
+    } finally {
+      setLoading(false);
     }
-  }, [open]);
+  };
+
+  fetchQcCheck();
+}, [open]);
+
+  
   const filteredTrucks = React.useMemo(() => {
     return trucks.filter((t) =>
       `${t.plate ?? ""} ${t.companyName ?? ""} ${t.truckTypeName ?? ""}`

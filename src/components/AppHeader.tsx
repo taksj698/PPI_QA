@@ -17,12 +17,11 @@ export default function AppHeader({
   logoText = "Q",
   onSearchClick,
   onLogout,
-  themeColor = "#0B1C2D",
 }: AppHeaderProps) {
   return (
     <Box
-      sx={{
-        bgcolor: themeColor,
+       sx={(theme) => ({
+        background: theme.custom.gradientHeader,
         color: "white",
         px: { xs: 2, md: 3 },
         py: 1.5,
@@ -33,17 +32,17 @@ export default function AppHeader({
         top: 0,
         zIndex: 1100,
         boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
-      }}
+       })}
     >
       <Stack direction="row" alignItems="center" spacing={1.5}>
         <Avatar
-          sx={{
+        sx={(theme) => ({
             width: 32,
             height: 32,
             bgcolor: "white",
-            color: themeColor,
+            color: theme.custom.gradientHeader,
             fontWeight: 900,
-          }}
+        })}
         >
           {logoText}
         </Avatar>
