@@ -23,6 +23,8 @@ import { QcCheck, QcCheckResponse } from "@/types/qcCheck.type";
 import ScaleIcon from "@mui/icons-material/Scale";
 import { formatDateTime } from "@/utils/date";
 import { InputAdornment } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+
 export type Truck = {
   id: string | number;
   plate: string;
@@ -46,8 +48,11 @@ export default function TruckSearchDialog({
   // onSearchChange,
   // trucks,
   onSelectTruck,
-  themeColor = "#0B1C2D",
+
 }: TruckSearchDialogProps) {
+  const theme = useTheme();
+  const themeColor = theme.custom.gradientHeader;
+
 
   const [trucks, setTrucks] = useState<QcCheck[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -97,7 +102,7 @@ useEffect(() => {
         }
       }
     }}>
-      <Box sx={{ bgcolor: themeColor, p: 3, color: "white" }}>
+      <Box sx={{ background: themeColor, p: 3, color: "white" }}>
         <Typography variant="h6" fontWeight={800} mb={2}>
           เลือกคิวรถ
         </Typography>

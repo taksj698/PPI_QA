@@ -44,6 +44,7 @@ import { authService } from "../login/auth.service";
 import { QcCheck } from "@/types/qcCheck.type";
 import { group } from "console";
 import { formatDateTime } from "@/utils/date";
+import theme from "@/theme/theme";
 
 
 const QcPineapplePage = () => {
@@ -118,15 +119,16 @@ const QcPineapplePage = () => {
                 size="large"
                 startIcon={<SearchIcon />}
                 onClick={() => setOpenSearch(true)}
-                sx={{
+                sx={(theme) => ({
                   borderRadius: 10,
                   px: 6,
                   py: 1.5,
                   bgcolor: THEME_ACCENT,
                   fontWeight: 800,
                   fontSize: "1.1rem",
-                  boxShadow: "0 8px 20px rgba(41, 98, 255, 0.3)",
-                }}
+                  boxShadow: "0 8px 20px rgba(16, 20, 29, 0.3)",
+                  background: theme.custom.gradientHeader
+                })}
               >
                 ค้นหาคิวรถ
               </Button>
