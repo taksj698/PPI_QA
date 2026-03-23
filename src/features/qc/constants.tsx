@@ -168,6 +168,32 @@ export const GROUP_QA: GroupQA[] = [
   { group: "summary", name: "สรุปจำนวนลูก (รวม)" },
 ];
 
+
+export const QUALITY_STATUS = {
+  PENDING: "PENDING"
+};
+
+export const DOC_TYPE = {
+  WEIGHTDATA: "WEIGHTDATA"
+};
+
+export const DIMENSION_TYPE = {
+  DETAIL: "DETAIL",
+  RANDOM: "RANDOM",
+  REMARK: "REMARK",
+  AVG: "AVG",
+  TOTAL: "TOTAL",
+  PERCENT: "PERCENT",
+  ESTIMATE: "ESTIMATE",
+};
+
+export const DIMENSION_UNIT = {
+  PPM: "PPM",
+  PERCENT: "PERCENT",
+  KG: "KG",
+  EACH: "EACH",
+};
+
 // export const  GROUPS: string[] = ["ขนาด", "ความสุก", "ตำหนิ", "สรุปจำนวนลูก (รวม)"];
 
 // export const  MOCK_TRUCKS: TruckQueue[] = [

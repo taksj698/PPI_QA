@@ -52,7 +52,6 @@ const QcPineapplePage = () => {
     isLoading,
     setOpenSearch,
     selectedTruck,
-    buildQualityPayload,
     globalSampleCount,
     handleSampleCountChange,
     setRounds,
@@ -485,12 +484,12 @@ const QcPineapplePage = () => {
         hasValidationError={hasValidationError}
         onSaveDraft={() => {
           // logic save draft
-          console.log("selectedTruck:", selectedTruck);
-          console.log("rounds:", rounds);
-          console.log("values:", values);
-          console.log("remarks:", rowRemarks);
-          const payload = buildQualityPayload();
-          console.log("API PAYLOAD:", payload);
+          // console.log("selectedTruck:", selectedTruck);
+          // console.log("rounds:", rounds);
+          // console.log("values:", values);
+          // console.log("remarks:", rowRemarks);
+          // const payload = buildQualityPayload();
+          // console.log("API PAYLOAD:", payload);
 
         }}
         onSubmit={() => setConfirmOpen(true)}

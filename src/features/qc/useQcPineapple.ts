@@ -1,8 +1,10 @@
 import { SelectChangeEvent } from "@mui/material";
-import { ASSESSMENT_CRITERIA, GROUP_QA } from "./constants"; //, MOCK_TRUCKS
+import { ASSESSMENT_CRITERIA, DIMENSION_TYPE, DIMENSION_UNIT, DOC_TYPE, GROUP_QA, QUALITY_STATUS } from "./constants"; //, MOCK_TRUCKS
 import { useEffect, useMemo, useState } from "react";
 import { QcCheck } from "@/types/qcCheck.type";
 import { group } from "console";
+import { QualityRequest, TbQualityDetail } from "@/types/qualityRequest.type";
+import { stringify } from "querystring";
 
 
 
@@ -21,6 +23,9 @@ export const useQcPineapple = () => {
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [confirmOpen, setConfirmOpen] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    // main obj
+    const [qualityRequestList, setQualityRequestList] = useState<QualityRequest[]>([]);
 
     // Filter trucks based on search
     // const filteredTrucks = useMemo(() => {
@@ -80,6 +85,10 @@ export const useQcPineapple = () => {
     //     setRowRemarks(newRemarks);
     // };
 
+    useEffect(() => {
+        console.log("Updated qualityRequestList:", qualityRequestList);
+    }, [qualityRequestList]);
+
     const handleValueChange = (
         groupName: string,
         roundId: number,
@@ -88,6 +97,75 @@ export const useQcPineapple = () => {
     ) => {
         console.log(`handleValueChange: group=${groupName}, roundId=${roundId}, criteriaId=${criteriaId}, val=${val}`);
         setValues((prev) => ({ ...prev, [`${roundId}_${criteriaId}`]: val }));
+
+        const dateformat = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+
+        setQualityRequestList(prev => {
+            // 🔍 หา parent (QualityRequest)
+            const index = prev.findIndex(
+                item =>
+                    item.qualityType === groupName &&
+                    item.planCode === criteriaId
+            );
+
+            const qualityRuleCode = `${criteriaId}_R${roundId}`;
+
+            // 🧱 function สร้าง detail ใหม่
+            const createDetail = (): TbQualityDetail => ({
+                qualityRuleCode,
+                dimensionType: DIMENSION_TYPE.DETAIL,
+                dimensionCode: `${DIMENSION_TYPE.DETAIL}_R${roundId}`,
+                dimensionValue: Number(val),
+                dimensionUnit: DIMENSION_UNIT.EACH,
+                remarkText: null
+            });
+
+            // ✅ กรณีมี parent แล้ว → update detail
+            if (index !== -1) {
+                const updated = [...prev];
+                const parent = { ...updated[index] };
+
+                const detailIndex = parent.tbQualityDetails.findIndex(
+                    d => d.qualityRuleCode === qualityRuleCode
+                );
+
+                let newDetails = [...parent.tbQualityDetails];
+
+                if (detailIndex !== -1) {
+                    // 👉 update detail
+                    newDetails[detailIndex] = {
+                        ...newDetails[detailIndex],
+                        dimensionValue: Number(val)
+                    };
+                } else {
+                    // 👉 add detail
+                    newDetails.push(createDetail());
+                }
+
+                parent.tbQualityDetails = newDetails;
+
+                updated[index] = parent;
+                return updated;
+            }
+
+            // ❌ ยังไม่มี parent → สร้างใหม่ + ใส่ detail ตัวแรก
+            const newItem: QualityRequest = {
+                qualityId: 0,
+                qualityCode: `QC_${groupName}_${dateformat}`,
+                qualityType: groupName,
+                planCode: criteriaId,
+                refDocType: DOC_TYPE.WEIGHTDATA,
+                refDocId: selectedTruck?.ticketOutCode || "",
+                inspectorDateTime: new Date().toISOString(),
+                inspectorBy: "",
+                status: QUALITY_STATUS.PENDING,
+                remark: "",
+                tbQualityDetails: [createDetail()] // 👈 ใส่ detail เลย
+            };
+
+            return [...prev, newItem];
+        });
+
     };
 
     const getNumericValue = (roundId: number, criteriaId: string): number => {
@@ -168,72 +246,7 @@ export const useQcPineapple = () => {
         // );
     };
 
-    const buildQualityPayload = () => {
-        const details: any[] = [];
 
-        rounds.forEach((round, roundIndex) => {
-            const rIndex = roundIndex + 1;
-
-            // DETAIL (แต่ละช่อง)
-            ASSESSMENT_CRITERIA.forEach((c, colIndex) => {
-                const cIndex = colIndex + 1;
-                const value = getNumericValue(round.id, c.id);
-
-                details.push({
-                    qualityRuleCode: `SIZE_DETAIL_R${rIndex}_C${cIndex}`,
-                    dimensionType: "DETAIL",
-                    dimensionCode: `DETAIL_R${rIndex}_C${cIndex}`,
-                    dimensionValue: value,
-                    dimensionUnit: "EACH",
-                    remarkText: rowRemarks[c.id] || null
-                });
-            });
-
-            // TOTAL ต่อรอบ
-            const total = ASSESSMENT_CRITERIA.reduce(
-                (sum, c) => sum + getNumericValue(round.id, c.id),
-                0
-            );
-
-            details.push({
-                qualityRuleCode: `SIZE_TOTAL${rIndex}`,
-                dimensionType: "TOTAL",
-                dimensionCode: `TOTAL${rIndex}`,
-                dimensionValue: total,
-                dimensionUnit: "EACH",
-                remarkText: null
-            });
-
-            // AVG (%)
-            const avg =
-                totalSamplesOverall > 0
-                    ? (total / totalSamplesOverall) * 100
-                    : 0;
-
-            details.push({
-                qualityRuleCode: `SIZE_AVG${rIndex}`,
-                dimensionType: "AVG",
-                dimensionCode: `AVG${rIndex}`,
-                dimensionValue: Number(avg.toFixed(2)),
-                dimensionUnit: "PERCENT",
-                remarkText: null
-            });
-        });
-
-        return {
-            qualityId: 0,
-            qualityCode: "QC_SIZE_20260101_001",
-            qualityType: "SIZE",
-            planCode: "SIZE_20260101001",
-            refDocType: "WEIGHTDATA",
-            refDocId: "WD202601010001",
-            inspectorDateTime: new Date().toISOString(),
-            inspectorBy: 1001,
-            status: "PENDING",
-            remark: "Size check before pricing",
-            tbQualityDetails: details
-        };
-    };
 
 
     return {
@@ -261,7 +274,6 @@ export const useQcPineapple = () => {
         setOpenSearch,
         setSearchQuery,
         setConfirmOpen,
-        buildQualityPayload,
         // functions
         handleValueChange,
         getRowTotal,
