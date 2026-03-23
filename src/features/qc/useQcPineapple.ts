@@ -5,6 +5,7 @@ import { QcCheck } from "@/types/qcCheck.type";
 import { group } from "console";
 import { QualityRequest, TbQualityDetail } from "@/types/qualityRequest.type";
 import { stringify } from "querystring";
+import { qcService } from "@/services/qc.service";
 
 
 
@@ -112,12 +113,14 @@ export const useQcPineapple = () => {
 
             // 🧱 function สร้าง detail ใหม่
             const createDetail = (): TbQualityDetail => ({
+                id: 0,
+                qualityId: 0,
                 qualityRuleCode,
                 dimensionType: DIMENSION_TYPE.DETAIL,
                 dimensionCode: `${DIMENSION_TYPE.DETAIL}_R${roundId}`,
                 dimensionValue: Number(val),
                 dimensionUnit: DIMENSION_UNIT.EACH,
-                remarkText: null
+                remark: null
             });
 
             // ✅ กรณีมี parent แล้ว → update detail
@@ -154,8 +157,8 @@ export const useQcPineapple = () => {
                 qualityCode: `QC_${groupName}_${dateformat}`,
                 qualityType: groupName,
                 planCode: criteriaId,
-                refDocType: DOC_TYPE.WEIGHTDATA,
-                refDocId: selectedTruck?.ticketOutCode || "",
+                docRefType: DOC_TYPE.WEIGHTDATA,
+                docId: selectedTruck?.ticketOutCode || "",
                 inspectorDateTime: new Date().toISOString(),
                 inspectorBy: "",
                 status: QUALITY_STATUS.PENDING,
@@ -247,6 +250,26 @@ export const useQcPineapple = () => {
     };
 
 
+    const saveDraft = async () => {
+
+
+        try {
+            //   setLoading(true);
+
+            const data: any = await qcService.insertQualityData(qualityRequestList[0]);
+
+            if (data.isSuccess) {
+                // const fetched = Array.isArray(data.data) ? data.data : [data.data];
+                // setTrucks(fetched);
+            }
+        } catch (error) {
+            console.error("Error fetching QC Check:", error);
+        } finally {
+            //   setLoading(false);
+        }
+
+    };
+
 
 
     return {
@@ -282,6 +305,7 @@ export const useQcPineapple = () => {
         handleSampleCountChange,
         handleAddRound,
         handleRemoveRound,
+        saveDraft
     };
 
 }

@@ -5,12 +5,14 @@
 
 
 export interface TbQualityDetail {
+  id: number;
+  qualityId : number;
   qualityRuleCode: string;
   dimensionType: string;
   dimensionCode: string;
   dimensionValue: number;
   dimensionUnit: string;
-  remarkText: string | null;
+  remark: string | null;
 }
 
 export interface QualityRequest {
@@ -18,8 +20,8 @@ export interface QualityRequest {
   qualityCode: string;
   qualityType: string;
   planCode: string;
-  refDocType: string;
-  refDocId: string;
+  docId: string;
+  docRefType: string;
   inspectorDateTime: string; // ISO string
   inspectorBy: string;
   status: string;

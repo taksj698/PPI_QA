@@ -75,6 +75,7 @@ const QcPineapplePage = () => {
     handleSubmit,
     handleAddRound,
     handleRemoveRound,
+    saveDraft
   } = useQcPineapple();
 
 
@@ -482,16 +483,18 @@ const QcPineapplePage = () => {
         roundsCount={rounds.length}
         totalSamples={totalSamplesOverall}
         hasValidationError={hasValidationError}
-        onSaveDraft={() => {
-          // logic save draft
-          // console.log("selectedTruck:", selectedTruck);
-          // console.log("rounds:", rounds);
-          // console.log("values:", values);
-          // console.log("remarks:", rowRemarks);
-          // const payload = buildQualityPayload();
-          // console.log("API PAYLOAD:", payload);
+        onSaveDraft={saveDraft}
+          
+        //   () => {
+        //   // logic save draft
+        //   // console.log("selectedTruck:", selectedTruck);
+        //   // console.log("rounds:", rounds);
+        //   // console.log("values:", values);
+        //   // console.log("remarks:", rowRemarks);
+        //   // const payload = buildQualityPayload();
+        //   // console.log("API PAYLOAD:", payload);
 
-        }}
+        // }}
         onSubmit={() => setConfirmOpen(true)}
         accentColor={THEME_ACCENT}
         gradient={THEME_GRADIENT}
