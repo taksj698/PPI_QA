@@ -12,6 +12,7 @@ export interface QcCheck {
     qcState: boolean | null;
     truckTypeName: string | null;
     companyName: string | null;
+    sequenceId: string;
 }
 
 export type QcCheckResponse = ApiResponse<QcCheck>;

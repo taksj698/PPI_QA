@@ -155,10 +155,10 @@ export const useQcPineapple = () => {
             const newItem: QualityRequest = {
                 qualityId: 0,
                 qualityCode: `QC_${groupName}_${dateformat}`,
-                qualityType: groupName,
+                qualityType: groupName.toUpperCase(),
                 planCode: criteriaId,
                 docRefType: DOC_TYPE.WEIGHTDATA,
-                docId: selectedTruck?.ticketOutCode || "",
+                docId: selectedTruck?.sequenceId || "",
                 inspectorDateTime: new Date().toISOString(),
                 inspectorBy: "",
                 status: QUALITY_STATUS.PENDING,
