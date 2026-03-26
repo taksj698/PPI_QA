@@ -73,7 +73,6 @@ const QcPineapplePage = () => {
     // filteredTrucks,
     setSelectedTruck, confirmOpen,
     handleSubmit,
-    handleAddRound,
     handleRemoveRound,
     saveDraft
   } = useQcPineapple();
@@ -208,13 +207,6 @@ const QcPineapplePage = () => {
                       </Select>
                     </Stack>
                   </Box>
-                  <Button
-                    variant="contained" startIcon={<AddIcon />}
-                    onClick={handleAddRound}
-                    sx={{ borderRadius: 3, fontWeight: 800, height: 45, bgcolor: THEME_ACCENT, boxShadow: 'none' }}
-                  >
-                    เพิ่มรอบ
-                  </Button>
                 </Stack>
               </Stack>
             </Paper>
@@ -267,15 +259,6 @@ const QcPineapplePage = () => {
                               height: 20,
                             }}
                           />
-                          {rounds.length > 1 && (
-                            <IconButton
-                              size="small"
-                              onClick={() => handleRemoveRound(r.id)}
-                              sx={{ p: 0 }}
-                            >
-                              <CloseIcon sx={{ fontSize: 14 }} color="error" />
-                            </IconButton>
-                          )}
                         </Stack>
                       </TableCell>
                     ))}

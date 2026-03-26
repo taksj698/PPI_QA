@@ -14,6 +14,10 @@ export const useQcPineapple = () => {
     const [globalSampleCount, setGlobalSampleCount] = useState<number>(10);
     const [rounds, setRounds] = useState<Round[]>(() => [
         { id: 1, name: "R1" },
+        { id: 2, name: "R2" },
+        { id: 3, name: "R3" },
+        { id: 4, name: "R4" },
+        { id: 5, name: "R5" },
     ]);
     const [values, setValues] = useState<ValuesState>({});
     const [rowRemarks, setRowRemarks] = useState<RemarksState>({});
@@ -218,38 +222,6 @@ export const useQcPineapple = () => {
         setGlobalSampleCount(Number(event.target.value));
     };
 
-    const handleAddRound = () => {
-        setRounds((prev) => {
-            const nextId = prev.length + 1;
-
-            return [
-                ...prev,
-                {
-                    id: nextId,
-                    name: `R${nextId}`,
-                },
-            ];
-        });
-    };
-    const handleRemoveRound = (id: number) => {
-        setRounds((prevRounds) => {
-            const filtered = prevRounds.filter((r) => r.id !== id);
-
-            const reIndexed = filtered.map((r, index) => ({
-                id: index + 1,
-                name: `R${index + 1}`,
-            }));
-
-            return reIndexed;
-        });
-
-        // 👇 ลบค่าที่ผูกกับ round นี้ออกด้วย
-        // setValues((prevValues) =>
-        //     prevValues.filter((v) => v. !== id)
-        // );
-    };
-
-
     const saveDraft = async () => {
 
 
@@ -303,8 +275,6 @@ export const useQcPineapple = () => {
         getRoundTotalForGroup,
         handleSubmit,
         handleSampleCountChange,
-        handleAddRound,
-        handleRemoveRound,
         saveDraft
     };
 
