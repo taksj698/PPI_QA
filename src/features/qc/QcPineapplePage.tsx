@@ -70,10 +70,8 @@ const QcPineapplePage = () => {
     searchQuery,
     setSearchQuery,
     isSearching,
-    // filteredTrucks,
     setSelectedTruck, confirmOpen,
     handleSubmit,
-    handleRemoveRound,
     saveDraft
   } = useQcPineapple();
 

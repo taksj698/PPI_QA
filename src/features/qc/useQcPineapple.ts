@@ -32,64 +32,6 @@ export const useQcPineapple = () => {
     // main obj
     const [qualityRequestList, setQualityRequestList] = useState<QualityRequest[]>([]);
 
-    // Filter trucks based on search
-    // const filteredTrucks = useMemo(() => {
-    //     return MOCK_TRUCKS.filter(
-    //         (t) =>
-    //             t.plate.includes(searchQuery) ||
-    //             t.supplier.toLowerCase().includes(searchQuery.toLowerCase()),
-    //     );
-    // }, [searchQuery]);
-
-    // Simulation for Skeleton Loading
-    // useEffect(() => {
-    //     if (openSearch) {
-    //         const timer = setTimeout(() => setIsSearching(false), 2000);
-    //         return () => clearTimeout(timer);
-    //     }
-    // }, [openSearch]);
-
-    // useEffect(() => {
-    //     initMockDraft();
-    // }, []);
-
-
-    // //fortest
-    // const initMockDraft = () => {
-    //     const mockRoundId = Date.now();
-
-    //     // set truck
-    //     setSelectedTruck({
-    //         id: 1,
-    //         plate: "1กก-1234",
-    //         supplier: "Supplier Test"
-    //     } as any);
-
-    //     // set rounds
-    //     setRounds([
-    //         { id: mockRoundId, name: "R1" },
-    //         { id: mockRoundId + 1, name: "R2" }
-    //     ]);
-
-    //     // set values (ต้องใช้ key แบบ roundId_criteriaId)
-    //     const newValues: Record<string, string> = {};
-
-    //     ASSESSMENT_CRITERIA.forEach((c) => {
-    //         newValues[`${mockRoundId}_${c.id}`] = "1";
-    //         newValues[`${mockRoundId + 1}_${c.id}`] = "2";
-    //     });
-
-    //     setValues(newValues);
-
-    //     // set remarks
-    //     const newRemarks: Record<string, string> = {};
-    //     ASSESSMENT_CRITERIA.forEach((c) => {
-    //         newRemarks[c.id] = "ทดสอบหมายเหตุ";
-    //     });
-
-    //     setRowRemarks(newRemarks);
-    // };
-
     useEffect(() => {
         console.log("Updated qualityRequestList:", qualityRequestList);
     }, [qualityRequestList]);
@@ -100,7 +42,6 @@ export const useQcPineapple = () => {
         criteriaId: string,
         val: string,
     ) => {
-        console.log(`handleValueChange: group=${groupName}, roundId=${roundId}, criteriaId=${criteriaId}, val=${val}`);
         setValues((prev) => ({ ...prev, [`${roundId}_${criteriaId}`]: val }));
 
         const dateformat = new Date().toISOString().slice(0, 10).replace(/-/g, "");
@@ -109,11 +50,10 @@ export const useQcPineapple = () => {
             // 🔍 หา parent (QualityRequest)
             const index = prev.findIndex(
                 item =>
-                    item.qualityType === groupName &&
-                    item.planCode === criteriaId
+                    item.qualityType === groupName
             );
 
-            const qualityRuleCode = `${criteriaId}_R${roundId}`;
+            const qualityRuleCode = `${groupName}_${DIMENSION_TYPE.DETAIL}_R${criteriaId}_C${roundId}`//`${criteriaId}_R${roundId}`;
 
             // 🧱 function สร้าง detail ใหม่
             const createDetail = (): TbQualityDetail => ({
@@ -121,7 +61,7 @@ export const useQcPineapple = () => {
                 qualityId: 0,
                 qualityRuleCode,
                 dimensionType: DIMENSION_TYPE.DETAIL,
-                dimensionCode: `${DIMENSION_TYPE.DETAIL}_R${roundId}`,
+                dimensionCode: `${DIMENSION_TYPE.DETAIL}_R${criteriaId}_C${roundId}`,
                 dimensionValue: Number(val),
                 dimensionUnit: DIMENSION_UNIT.EACH,
                 remark: null
@@ -159,8 +99,8 @@ export const useQcPineapple = () => {
             const newItem: QualityRequest = {
                 qualityId: 0,
                 qualityCode: `QC_${groupName}_${dateformat}`,
-                qualityType: groupName.toUpperCase(),
-                planCode: criteriaId,
+                qualityType: groupName,
+                planCode: `${groupName}_${dateformat}`,
                 docRefType: DOC_TYPE.WEIGHTDATA,
                 docId: selectedTruck?.sequenceId || "",
                 inspectorDateTime: new Date().toISOString(),
@@ -223,23 +163,20 @@ export const useQcPineapple = () => {
     };
 
     const saveDraft = async () => {
-
-
         try {
-            //   setLoading(true);
+            for (const item of qualityRequestList) {
+                console.log("Saving item:", item);
+                const data: any = await qcService.insertQualityData(item);
 
-            const data: any = await qcService.insertQualityData(qualityRequestList[0]);
-
-            if (data.isSuccess) {
-                // const fetched = Array.isArray(data.data) ? data.data : [data.data];
-                // setTrucks(fetched);
+                if (data.isSuccess) {
+                    console.log("Draft saved successfully:", item);
+                } else {
+                    console.warn("Save failed:", item);
+                }
             }
         } catch (error) {
-            console.error("Error fetching QC Check:", error);
-        } finally {
-            //   setLoading(false);
+            console.error("Error saving QC Check:", error);
         }
-
     };
 
 

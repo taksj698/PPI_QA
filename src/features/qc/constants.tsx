@@ -28,144 +28,144 @@ export const THEME_GRADIENT = "linear-gradient(135deg, #1A237E 0%, #2962FF 100%)
 
 export const ASSESSMENT_CRITERIA: AssessmentCriteria[] = [
   {
-    id: "size_large",
+    id: "1", //size_large
     label: "ลูกใหญ่ (≥ 95 mm)",
-    group: "size",
+    group: "SIZE",
     icon: <StraightenIcon fontSize="small" color="primary" />,
   },
   {
-    id: "size_medium",
+    id: "2", //size_medium
     label: "ลูกเล็ก (85 - 94 mm)",
-    group: "size",
+    group: "SIZE",
     icon: <StraightenIcon fontSize="small" color="primary" />,
   },
   {
-    id: "size_small",
+    id: "3", //size_small
     label: "ลูกจิ๋ว (< 75-84 mm)",
-    group: "size",
+    group: "SIZE",
     icon: <StraightenIcon fontSize="small" color="primary" />,
   },
   {
-    id: "ripe_raw",
+    id: "4", //ripe_raw
     label: "ดิบ",
-    group: "ripen",
+    group: "RIPEN",
     icon: <GrassIcon fontSize="small" sx={{ color: "#4CAF50" }} />,
   },
   {
-    id: "ripe_yellow1",
+    id: "5", //ripe_yellow1
     label: "ปรากฎเหลือง (1-3 ตา)",
-    group: "ripen",
+    group: "RIPEN",
     icon: <GrassIcon fontSize="small" sx={{ color: "#FFEB3B" }} />,
   },
   {
-    id: "ripe_half",
+    id: "6", //ripe_half
     label: "ครึ่งลูกขึ้นไป",
-    group: "ripen",
+    group: "RIPEN",
     icon: <GrassIcon fontSize="small" sx={{ color: "#FFC107" }} />,
   },
   {
-    id: "def_stunted_less",
+    id: "7",//def_stunted_less
     label: "แกร็น < 30%",
-    group: "flaw",
+    group: "FLAW",
     icon: <WarningIcon fontSize="small" sx={{ color: "#FF9800" }} />,
   },
   {
-    id: "def_stunted_more",
+    id: "8",//def_stunted_more
     label: "แกร็น > 30%",
-    group: "flaw",
+    group: "FLAW",
     icon: <WarningIcon fontSize="small" sx={{ color: "#F44336" }} />,
   },
   {
-    id: "def_bruised_less",
+    id: "9",//def_bruised_less
     label: "ช้ำ < 30%",
-    group: "flaw",
+    group: "FLAW",
     icon: <WaterDropIcon fontSize="small" sx={{ color: "#9C27B0" }} />,
   },
   {
-    id: "def_bruised_mid",
+    id: "10",//def_bruised_mid
     label: "ช้ำ > 30-50%",
-    group: "flaw",
+    group: "FLAW",
     icon: <WaterDropIcon fontSize="small" sx={{ color: "#7B1FA2" }} />,
   },
   {
-    id: "def_bruised_more",
+    id: "11",//def_bruised_more
     label: "ช้ำ > 50%",
-    group: "flaw",
+    group: "FLAW",
     icon: <WaterDropIcon fontSize="small" sx={{ color: "#4A148C" }} />,
   },
   {
-    id: "def_sunburn",
+    id: "12",//def_sunburn
     label: "แดดเผา",
-    group: "flaw",
+    group: "FLAW",
     icon: <SunIcon fontSize="small" sx={{ color: "#FF5722" }} />,
   },
   {
-    id: "def_hollow",
+    id: "13",//def_hollow
     label: "เนื้อโพรง",
-    group: "flaw",
+    group: "FLAW",
     icon: <HollowIcon fontSize="small" sx={{ color: "#795548" }} />,
   },
   {
-    id: "def_rotten",
+    id: "14",//def_rotten
     label: "เน่า",
-    group: "flaw",
+    group: "FLAW",
     icon: <BlockIcon fontSize="small" color="error" />,
   },
   {
-    id: "def_fungus",
+    id: "15",//def_fungus
     label: "เชื้อรา",
-    group: "flaw",
+    group: "FLAW",
     icon: <FungusIcon fontSize="small" sx={{ color: "#607D8B" }} />,
   },
   {
-    id: "def_seed",
+    id: "16",//def_seed
     label: "เมล็ด",
-    group: "flaw",
+    group: "FLAW",
     icon: <SeedIcon fontSize="small" sx={{ color: "#212121" }} />,
   },
   {
-    id: "def_deformed",
+    id: "17",//def_deformed
     label: "รูปร่างผิดปกติ",
-    group: "flaw",
+    group: "FLAW",
     icon: <DeformedIcon fontSize="small" sx={{ color: "#9E9E9E" }} />,
   },
   {
-    id: "def_pest",
+    id: "18",//def_pest
     label: "สิ่งปนเปื้อน/สัตว์กัดแทะ",
-    group: "flaw",
+    group: "FLAW",
     icon: <BugIcon fontSize="small" sx={{ color: "#3E2723" }} />,
   },
   {
-    id: "def_fraud",
+    id: "19",//def_fraud
     label: "พันธุ์อื่น (Food Fraud)",
-    group: "flaw",
+    group: "FLAW",
     icon: <BlockIcon fontSize="small" color="error" />,
   },
   {
-    id: "summary_good",
+    id: "20",//summary_good
     label: "จำนวนลูกที่เป็นของดี",
-    group: "summary",
+    group: "SUMMARY",
     icon: <SuccessIcon fontSize="small" color="success" />,
   },
   {
-    id: "summary_minor",
+    id: "21",//summary_minor
     label: "จำนวนลูกที่มีแกร็น <30% ช้ำ <30%",
-    group: "summary",
+    group: "SUMMARY",
     icon: <WarningIcon fontSize="small" sx={{ color: "#FFC107" }} />,
   },
   {
-    id: "summary_waste",
+    id: "22",//summary_waste
     label: "จำนวนลูกที่เป็นของเสีย (*)",
-    group: "summary",
+    group: "SUMMARY",
     icon: <WasteIcon fontSize="small" color="error" />,
   },
 ];
 
 export const GROUP_QA: GroupQA[] = [
-  { group: "size", name: "ขนาด" },
-  { group: "ripen", name: "ความสุก" },
-  { group: "flaw", name: "ตำหนิ" },
-  { group: "summary", name: "สรุปจำนวนลูก (รวม)" },
+  { group: "SIZE", name: "ขนาด" },
+  { group: "RIPEN", name: "ความสุก" },
+  { group: "FLAW", name: "ตำหนิ" },
+  { group: "SUMMARY", name: "สรุปจำนวนลูก (รวม)" },
 ];
 
 
