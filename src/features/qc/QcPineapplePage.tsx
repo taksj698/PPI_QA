@@ -64,6 +64,7 @@ const QcPineapplePage = () => {
     totalSamplesOverall,
     rowRemarks,
     setRowRemarks,
+    chooseTruck,
     hasValidationError,
     setConfirmOpen,
     openSearch,
@@ -465,7 +466,7 @@ const QcPineapplePage = () => {
         totalSamples={totalSamplesOverall}
         hasValidationError={hasValidationError}
         onSaveDraft={saveDraft}
-          
+
         //   () => {
         //   // logic save draft
         //   // console.log("selectedTruck:", selectedTruck);
@@ -489,7 +490,7 @@ const QcPineapplePage = () => {
         // onSearchChange={setSearchQuery}
         // isSearching={isSearching}
         // trucks={filteredTrucks}
-        onSelectTruck={(truck) => { setSelectedTruck(truck as QcCheck); console.log("Selected Truck:", truck); }}
+        onSelectTruck={chooseTruck}
       />
 
       {/* Confirm Modal */}

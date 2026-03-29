@@ -6,6 +6,8 @@ import { group } from "console";
 import { QualityRequest, TbQualityDetail } from "@/types/qualityRequest.type";
 import { stringify } from "querystring";
 import { qcService } from "@/services/qc.service";
+import { QcInsertResponse, Quality, QualityDetail } from "@/types/qcInsert.type";
+import { QcTicketResponse } from "@/types/QcResponse.type";
 
 
 
@@ -165,9 +167,8 @@ export const useQcPineapple = () => {
     const saveDraft = async () => {
         try {
             for (const item of qualityRequestList) {
-                console.log("Saving item:", item);
-                const data: any = await qcService.insertQualityData(item);
-
+                const data: QcInsertResponse = await qcService.insertQualityData(item);
+                console.log("insert", data);
                 if (data.isSuccess) {
                     console.log("Draft saved successfully:", item);
                 } else {
@@ -178,6 +179,125 @@ export const useQcPineapple = () => {
             console.error("Error saving QC Check:", error);
         }
     };
+
+    // const chooseTruck = async (truck: QcCheck) => {
+    //     setSelectedTruck(truck);
+    //     const res = await qcService.getQcByTicketCode(truck.sequenceId);
+
+    //     if (res?.data?.length) {
+    //         const details = res.data.flatMap(q => q.tbQualityDetails);
+    //         const mappedValues = mapQcToValues(details);
+    //         setValues(mappedValues);
+
+    //         setQualityRequestList(res?.data as QualityRequest[]);
+    //     }
+    // };
+    const chooseTruck = async (truck: QcCheck) => {
+        setSelectedTruck(truck);
+
+        const res = await qcService.getQcByTicketCode(truck.sequenceId);
+        if (!res?.data?.length) {
+            // ถ้าไม่มีข้อมูล → reset state
+            setValues({});
+            setQualityRequestList([]);
+            return;
+        }
+
+        const apiData: QualityRequest[] = (res.data as Quality[]).map(q => ({
+            qualityId: q.id ?? 0, // default 0 ถ้าไม่มี
+            qualityCode: q.qualityCode ?? "",
+            qualityType: q.qualityType ?? "",
+            planCode: q.planCode ?? "",
+            docId: q.docId ?? "",
+            docRefType: q.docRefType ?? "",
+            inspectorDateTime: q.inspectorDateTime ?? new Date().toISOString(),
+            inspectorBy: q.inspectorBy ?? "",
+            status: q.status ?? "PENDING",
+            remark: q.remark ?? "",
+            tbQualityDetails: q.tbQualityDetails ?? [],
+        }));
+
+
+        setQualityRequestList(prev => {
+            // merge ข้อมูลเก่าที่ user แก้ไว้
+            return apiData.map(apiItem => {
+                const oldItem = prev.find(p => p.qualityType === apiItem.qualityType);
+
+                if (!oldItem) {
+                    // ไม่มีข้อมูลเก่าของ group นี้ → ใช้ข้อมูล API เลย
+                    return { ...apiItem, status: "PENDING" };
+                }
+
+                // มีข้อมูลเก่า → merge tbQualityDetails
+                const mergedDetails = apiItem.tbQualityDetails.map(detail => {
+                    const oldDetail = oldItem.tbQualityDetails.find(d => d.qualityRuleCode === detail.qualityRuleCode);
+                    return oldDetail ? { ...oldDetail } : detail;
+                });
+
+                return {
+                    ...apiItem,
+                    tbQualityDetails: mergedDetails,
+                    status: "PENDING" // set stage
+                };
+            });
+        });
+
+        // แปลง detail เป็น values สำหรับ form
+        const allDetails = apiData.flatMap(q => q.tbQualityDetails);
+        const mappedValues = mapQcToValues(allDetails);
+        setValues(mappedValues);
+    };
+
+
+
+    const mapQcToValues = (qualityDetails: QualityDetail[]) => {
+        const newValues: ValuesState = {};
+
+        qualityDetails.forEach((d) => {
+            // qualityRuleCode = "SIZE_DETAIL_R2_C1"
+            const match = d.qualityRuleCode.match(/R(\d+)_C(\d+)/);
+            console.log("match", match);
+            if (match) {
+                const rowId = parseInt(match[1], 10);  // R2 -> 2
+                const colId = match[2];               // C1 -> "1" (criteriaId)
+                newValues[`${colId}_${rowId}`] = String(d.dimensionValue);
+                // setValues((prev) => ({ ...prev, [`${roundId}_${criteriaId}`]: val }));
+            }
+        });
+
+        return newValues;
+    };
+
+
+
+
+
+
+
+
+    const prefillValuesFromApi = (qualities: Quality[]) => {
+        const newValues: ValuesState = {};
+        const newRemarks: RemarksState = {};
+
+        qualities.forEach((q) => {
+            q.tbQualityDetails.forEach((d) => {
+                // ตัวอย่าง qualityRuleCode: "SIZE_DETAIL_R1_C1"
+                const match = d.qualityRuleCode.match(/_R(\d+)_C(\d+)/);
+                if (match) {
+                    const roundId = parseInt(match[1], 10);
+                    const criteriaId = match[2];
+                    newValues[`${roundId}_${criteriaId}`] = String(d.dimensionValue);
+                    if (d.remark) newRemarks[`${roundId}_${criteriaId}`] = d.remark;
+                }
+            });
+        });
+
+        setValues(newValues);
+        setRowRemarks(newRemarks);
+    };
+
+
+
 
 
 
@@ -197,7 +317,7 @@ export const useQcPineapple = () => {
         hasValidationError,
         targetLimit,
         totalSamplesOverall,
-
+        chooseTruck,
         // setters
         setSelectedTruck,
         setGlobalSampleCount,

@@ -57,33 +57,33 @@ export default function TruckSearchDialog({
   const [trucks, setTrucks] = useState<QcCheck[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
-useEffect(() => {
-  if (!open) return;
+  useEffect(() => {
+    if (!open) return;
 
-  const fetchQcCheck = async () => {
-    try {
-      setLoading(true);
+    const fetchQcCheck = async () => {
+      try {
+        setLoading(true);
 
-      const data: QcCheckResponse = await qcService.getQcCheck();
+        const data: QcCheckResponse = await qcService.getQcCheck();
 
-      if (data.isSuccess) {
-        const fetched = Array.isArray(data.data) ? data.data : [data.data];
-        setTrucks(fetched);
+        if (data.isSuccess) {
+          const fetched = Array.isArray(data.data) ? data.data : [data.data];
+          setTrucks(fetched);
+        }
+      } catch (error) {
+        console.error("Error fetching QC Check:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching QC Check:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  fetchQcCheck();
-}, [open]);
+    fetchQcCheck();
+  }, [open]);
 
-  
+
   const filteredTrucks = React.useMemo(() => {
     return trucks.filter((t) =>
-      `${t.plate ?? ""} ${t.companyName ?? ""} ${t.truckTypeName ?? ""}`
+      `${t.plate ?? ""} ${t.companyName ?? ""} ${t.sequenceId ?? ""} ${t.truckTypeName ?? ""}`
         .toLowerCase()
         .includes(searchQuery.toLowerCase())
     );
@@ -174,6 +174,9 @@ useEffect(() => {
 
                       <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ pl: 3.5 }}>
                         {t.companyName}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ pl: 3.5 }}>
+                        {t.sequenceId}
                       </Typography>
                     </Stack>
 

@@ -19,7 +19,9 @@ import {
   BugReport as BugIcon,
   Grain as SeedIcon,
   Adjust as HollowIcon,
+  Science as ScienceIcon,
 } from "@mui/icons-material";
+
 
 export const THEME_NAVY = "#1A237E";
 export const THEME_BLUE_LIGHT = "#E3F2FD";
@@ -142,19 +144,55 @@ export const ASSESSMENT_CRITERIA: AssessmentCriteria[] = [
     icon: <BlockIcon fontSize="small" color="error" />,
   },
   {
-    id: "20",//summary_good
+    id: "20",
+    label: "ค่าไนเตรทครั้งที่ 1",
+    group: "NITRATE",
+    icon: <ScienceIcon fontSize="small" color="success" />,
+  },
+  {
+    id: "21",
+    label: "ค่าไนเตรทครั้งที่ 2",
+    group: "NITRATE",
+    icon: <ScienceIcon fontSize="small" color="success" />,
+  },
+  {
+    id: "22",
+    label: "ค่าไนเตรทครั้งที่ 3",
+    group: "NITRATE",
+    icon: <ScienceIcon fontSize="small" color="success" />,
+  },
+  {
+    id: "23",
+    label: "ค่าไนเตรทครั้งที่ 4",
+    group: "NITRATE",
+    icon: <ScienceIcon fontSize="small" color="success" />,
+  },
+  {
+    id: "24",
+    label: "ค่าไนเตรทครั้งที่ 5",
+    group: "NITRATE",
+    icon: <ScienceIcon fontSize="small" color="success" />,
+  },
+  {
+    id: "25",
+    label: "ค่าไนเตรทครั้งที่ 6",
+    group: "NITRATE",
+    icon: <ScienceIcon fontSize="small" color="success" />,
+  },
+  {
+    id: "26",//summary_good
     label: "จำนวนลูกที่เป็นของดี",
     group: "SUMMARY",
     icon: <SuccessIcon fontSize="small" color="success" />,
   },
   {
-    id: "21",//summary_minor
+    id: "27",//summary_minor
     label: "จำนวนลูกที่มีแกร็น <30% ช้ำ <30%",
     group: "SUMMARY",
     icon: <WarningIcon fontSize="small" sx={{ color: "#FFC107" }} />,
   },
   {
-    id: "22",//summary_waste
+    id: "28",//summary_waste
     label: "จำนวนลูกที่เป็นของเสีย (*)",
     group: "SUMMARY",
     icon: <WasteIcon fontSize="small" color="error" />,
@@ -165,6 +203,7 @@ export const GROUP_QA: GroupQA[] = [
   { group: "SIZE", name: "ขนาด" },
   { group: "RIPEN", name: "ความสุก" },
   { group: "FLAW", name: "ตำหนิ" },
+  { group: "NITRATE", name: "ไนเตรด" },
   { group: "SUMMARY", name: "สรุปจำนวนลูก (รวม)" },
 ];
 
@@ -193,48 +232,3 @@ export const DIMENSION_UNIT = {
   KG: "KG",
   EACH: "EACH",
 };
-
-// export const  GROUPS: string[] = ["ขนาด", "ความสุก", "ตำหนิ", "สรุปจำนวนลูก (รวม)"];
-
-// export const  MOCK_TRUCKS: TruckQueue[] = [
-//   {
-//     id: "T001",
-//     plate: "82-6989",
-//     supplier: "สวนกำนันเปี๊ยก",
-//     time: "08:30",
-//     weight: "9.5 ตัน",
-//     type: "6 ล้อ",
-//   },
-//   {
-//     id: "T002",
-//     plate: "70-1234",
-//     supplier: "ไร่รวมทรัพย์",
-//     time: "09:15",
-//     weight: "12.0 ตัน",
-//     type: "10 ล้อ",
-//   },
-//   {
-//     id: "T003",
-//     plate: "ผก-555",
-//     supplier: "เกษตรเจริญผล",
-//     time: "10:00",
-//     weight: "4.2 ตัน",
-//     type: "กระบะ",
-//   },
-//   {
-//     id: "T004",
-//     plate: "บพ-888",
-//     supplier: "สวนนายเก่ง",
-//     time: "10:30",
-//     weight: "8.8 ตัน",
-//     type: "6 ล้อ",
-//   },
-//   {
-//     id: "T005",
-//     plate: "กข-111",
-//     supplier: "ไร่แสงจันทร์",
-//     time: "11:00",
-//     weight: "10.2 ตัน",
-//     type: "10 ล้อ",
-//   },
-// ];
