@@ -20,7 +20,7 @@ export default function AppHeader({
 }: AppHeaderProps) {
   return (
     <Box
-       sx={(theme) => ({
+      sx={(theme) => ({
         background: theme.custom.gradientHeader,
         color: "white",
         px: { xs: 2, md: 3 },
@@ -32,20 +32,18 @@ export default function AppHeader({
         top: 0,
         zIndex: 1100,
         boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
-       })}
+      })}
     >
       <Stack direction="row" alignItems="center" spacing={1.5}>
-        <Avatar
-        sx={(theme) => ({
-            width: 32,
-            height: 32,
-            bgcolor: "white",
-            color: theme.custom.gradientHeader,
-            fontWeight: 900,
-        })}
-        >
-          {logoText}
-        </Avatar>
+        {/* <Avatar
+  src="https://cdn.prod.website-files.com/5f473a94183a537a7eb9fb3f/6160067654191bf8e868aa01_PPI-LOGO-WHITE.png"
+  alt="logo"
+  sx={{
+    width: 32,
+    height: 32,
+    bgcolor: "transparent", // 🔥 กันพื้นหลังทับรูป
+  }}
+/> */}
 
         <Typography
           variant="subtitle1"

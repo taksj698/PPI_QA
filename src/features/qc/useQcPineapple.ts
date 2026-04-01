@@ -23,12 +23,19 @@ export const useQcPineapple = () => {
     ]);
     const [values, setValues] = useState<ValuesState>({});
     const [rowRemarks, setRowRemarks] = useState<RemarksState>({});
+    const [estimatedWeights, setEstimatedWeights] = useState<EstimatedWeightState>({});
 
     // UI States
     const [openSearch, setOpenSearch] = useState<boolean>(false);
     const [isSearching, setIsSearching] = useState<boolean>(false);
     const [searchQuery, setSearchQuery] = useState<string>("");
-    const [confirmOpen, setConfirmOpen] = useState<boolean>(false);
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
+    const [confirmConfig, setConfirmConfig] = useState({
+        title: "",
+        description: "",
+        confirmText: "",
+    });
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     // main obj
@@ -148,50 +155,75 @@ export const useQcPineapple = () => {
         );
     }, [rounds, values, targetLimit, getRoundTotalForGroup]);
 
-    const handleSubmit = async () => {
-        setConfirmOpen(false);
-        setIsLoading(true);
-        // Simulate API Call
-        await new Promise((r) => setTimeout(r, 1500));
-        setIsLoading(false);
-        setSelectedTruck(null);
-        setRounds([{ id: 1, name: "R1" }]);
-        setValues({});
-        setSearchQuery("");
-    };
 
     const handleSampleCountChange = (event: SelectChangeEvent<number>) => {
         setGlobalSampleCount(Number(event.target.value));
     };
 
     const saveDraft = async () => {
+        setConfirmOpen(false);
+        setIsLoading(true);
         try {
+            let hasError = false;
+
             for (const item of qualityRequestList) {
                 const data: QcInsertResponse = await qcService.insertQualityData(item);
-                console.log("insert", data);
-                if (data.isSuccess) {
-                    console.log("Draft saved successfully:", item);
-                } else {
+
+                if (!data.isSuccess) {
+                    hasError = true;
                     console.warn("Save failed:", item);
                 }
             }
+
+            if (hasError) {
+                setIsLoading(false);
+                alert("บันทึก Draft ไม่สำเร็จบางรายการ ❌");
+            } else {
+
+                window.location.reload(); // 🔥 refresh page
+            }
+
         } catch (error) {
+            setIsLoading(false);
             console.error("Error saving QC Check:", error);
+            alert("เกิด error ระหว่างบันทึก ❌");
         }
     };
 
-    // const chooseTruck = async (truck: QcCheck) => {
-    //     setSelectedTruck(truck);
-    //     const res = await qcService.getQcByTicketCode(truck.sequenceId);
 
-    //     if (res?.data?.length) {
-    //         const details = res.data.flatMap(q => q.tbQualityDetails);
-    //         const mappedValues = mapQcToValues(details);
-    //         setValues(mappedValues);
+    const handleSubmit = async () => {
+        setConfirmOpen(false);
+        setIsLoading(true);
 
-    //         setQualityRequestList(res?.data as QualityRequest[]);
-    //     }
-    // };
+        try {
+            let hasError = false;
+            for (const item of qualityRequestList) {
+
+                item.status = QUALITY_STATUS.COMPLETE;
+                const data: QcInsertResponse = await qcService.insertQualityData(item);
+
+                if (!data.isSuccess) {
+                    hasError = true;
+                    console.warn("Save failed:", item);
+                }
+            }
+            if (hasError) {
+                setIsLoading(false);
+                alert("ส่งผลตรวจ ไม่สำเร็จบางรายการ ❌");
+            } else {
+                alert("ส่งผลตรวจ สำเร็จ ✅");
+                window.location.reload(); // 🔥 refresh page
+            }
+
+        } catch (error) {
+            setIsLoading(false);
+            console.error("Error saving QC Check:", error);
+            alert("เกิด error ระหว่างบันทึก ❌");
+        }
+    };
+
+
+
     const chooseTruck = async (truck: QcCheck) => {
         setSelectedTruck(truck);
 
@@ -212,7 +244,7 @@ export const useQcPineapple = () => {
             docRefType: q.docRefType ?? "",
             inspectorDateTime: q.inspectorDateTime ?? new Date().toISOString(),
             inspectorBy: q.inspectorBy ?? "",
-            status: q.status ?? "PENDING",
+            status: q.status ?? QUALITY_STATUS.PENDING,
             remark: q.remark ?? "",
             tbQualityDetails: q.tbQualityDetails ?? [],
         }));
@@ -225,7 +257,7 @@ export const useQcPineapple = () => {
 
                 if (!oldItem) {
                     // ไม่มีข้อมูลเก่าของ group นี้ → ใช้ข้อมูล API เลย
-                    return { ...apiItem, status: "PENDING" };
+                    return { ...apiItem, status: QUALITY_STATUS.PENDING };
                 }
 
                 // มีข้อมูลเก่า → merge tbQualityDetails
@@ -237,7 +269,7 @@ export const useQcPineapple = () => {
                 return {
                     ...apiItem,
                     tbQualityDetails: mergedDetails,
-                    status: "PENDING" // set stage
+                    status: QUALITY_STATUS.PENDING // set stage
                 };
             });
         });
@@ -317,6 +349,8 @@ export const useQcPineapple = () => {
         hasValidationError,
         targetLimit,
         totalSamplesOverall,
+        estimatedWeights,
+        setEstimatedWeights,
         chooseTruck,
         // setters
         setSelectedTruck,
@@ -332,7 +366,11 @@ export const useQcPineapple = () => {
         getRoundTotalForGroup,
         handleSubmit,
         handleSampleCountChange,
-        saveDraft
+        saveDraft,
+        confirmAction,
+        confirmConfig,
+        setConfirmAction,
+        setConfirmConfig
     };
 
 }

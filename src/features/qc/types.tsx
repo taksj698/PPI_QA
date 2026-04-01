@@ -33,3 +33,7 @@ interface ValuesState {
 interface RemarksState {
   [key: string]: string;
 }
+
+interface EstimatedWeightState {
+  [key: string]: string;
+}

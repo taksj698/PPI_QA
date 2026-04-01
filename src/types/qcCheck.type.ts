@@ -9,7 +9,7 @@ export interface QcCheck {
     inboundWeight: number | null;
     outboundWeight: number | null;
     grossWeight: number | null;
-    qcState: boolean | null;
+    qcState: number | null;
     truckTypeName: string | null;
     companyName: string | null;
     sequenceId: string;

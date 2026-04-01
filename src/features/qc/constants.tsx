@@ -209,7 +209,8 @@ export const GROUP_QA: GroupQA[] = [
 
 
 export const QUALITY_STATUS = {
-  PENDING: "PENDING"
+  PENDING: "PENDING",
+  COMPLETE: "COMPLETE",
 };
 
 export const DOC_TYPE = {

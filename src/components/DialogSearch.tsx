@@ -181,6 +181,17 @@ export default function TruckSearchDialog({
                     </Stack>
 
                     <Stack alignItems="flex-end">
+                      <Typography variant="caption" color="text.disabled">
+                        <Chip
+                          size="small" // 🔥 ลดความสูงทันที
+                          sx={{ fontSize: "0.65rem", ml: 0.5 }}
+                          key={t.sequenceId}
+                          {...({
+                            0: { label: "NEW", color: "info" },
+                            1: { label: "DRAFT", color: "warning" },
+                          } as const)[t.qcState ?? 0] ?? { label: "UNKNOWN", color: "default" }}
+                        />
+                      </Typography>
                       <Box display="flex" alignItems="center" color={themeColor}>
                         <AccessTimeIcon sx={{ fontSize: 14, mr: 0.5 }} />
                         <Typography variant="subtitle2" fontWeight={800} sx={{ fontSize: '0.75rem' }}>

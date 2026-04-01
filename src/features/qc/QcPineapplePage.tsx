@@ -63,6 +63,8 @@ const QcPineapplePage = () => {
     getRowTotal,
     totalSamplesOverall,
     rowRemarks,
+    estimatedWeights,
+    setEstimatedWeights,
     setRowRemarks,
     chooseTruck,
     hasValidationError,
@@ -73,8 +75,15 @@ const QcPineapplePage = () => {
     isSearching,
     setSelectedTruck, confirmOpen,
     handleSubmit,
-    saveDraft
+    saveDraft,
+    confirmAction,
+    confirmConfig,
+    setConfirmAction,
+    setConfirmConfig
   } = useQcPineapple();
+
+
+
 
 
 
@@ -92,7 +101,7 @@ const QcPineapplePage = () => {
 
       {/* Navbar */}
       <AppHeader
-        title="QC PINEAPPLE (TS)"
+        title="QA PINEAPPLE"
         logoText="Q"
         onSearchClick={() => setOpenSearch(true)}
         onLogout={() => authService.logout()}
@@ -146,7 +155,21 @@ const QcPineapplePage = () => {
                     <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
                       <Typography variant="h6" fontWeight={900} color={THEME_NAVY}>{selectedTruck.plate}</Typography>
                       <Chip label={selectedTruck.truckTypeName} size="small" sx={{ fontWeight: 700, bgcolor: '#E8EAF6' }} />
+                      <Chip
+                        size="small"
+                        sx={{ height: 20, fontSize: '0.65rem' }}
+                        {...({
+                          0: { label: "NEW", color: "info" },
+                          1: { label: "DRAFT", color: "warning" },
+                        } as const)[selectedTruck.qcState ?? 0]}
+                      />
                     </Stack>
+
+
+
+
+
+
                     <Stack direction="row" spacing={1} alignItems="center">
                       <TicketIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
                       <Typography variant="body2" color="textSecondary" fontWeight={700}>{selectedTruck.ticketOutCode}</Typography>
@@ -282,6 +305,9 @@ const QcPineapplePage = () => {
                       %
                     </TableCell>
                     <TableCell sx={{ fontWeight: 800, bgcolor: "#F8F9FA" }}>
+                      น้ำหนักประมาณการต่อคัน
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 800, bgcolor: "#F8F9FA" }}>
                       หมายเหตุ
                     </TableCell>
                   </TableRow>
@@ -315,7 +341,7 @@ const QcPineapplePage = () => {
                           </Typography>
                         </TableCell>
                         <TableCell
-                          colSpan={rounds.length + 3}
+                          colSpan={rounds.length + 4}
                           sx={{
                             bgcolor: groupName.name.includes("สรุป")
                               ? "#E8F5E9"
@@ -434,7 +460,19 @@ const QcPineapplePage = () => {
                               : "0"}
                             %
                           </TableCell>
-
+                          <TableCell>
+                            <InputBase
+                              placeholder="..."
+                              value={estimatedWeights[item.id] || ""}
+                              onChange={(e) =>
+                                setEstimatedWeights({
+                                  ...estimatedWeights,
+                                  [item.id]: e.target.value,
+                                })
+                              }
+                              sx={{ fontSize: "0.8rem", width: "100%" }}
+                            />
+                          </TableCell>
                           <TableCell>
                             <InputBase
                               placeholder="..."
@@ -465,19 +503,24 @@ const QcPineapplePage = () => {
         roundsCount={rounds.length}
         totalSamples={totalSamplesOverall}
         hasValidationError={hasValidationError}
-        onSaveDraft={saveDraft}
-
-        //   () => {
-        //   // logic save draft
-        //   // console.log("selectedTruck:", selectedTruck);
-        //   // console.log("rounds:", rounds);
-        //   // console.log("values:", values);
-        //   // console.log("remarks:", rowRemarks);
-        //   // const payload = buildQualityPayload();
-        //   // console.log("API PAYLOAD:", payload);
-
-        // }}
-        onSubmit={() => setConfirmOpen(true)}
+        onSaveDraft={() => {
+          setConfirmConfig({
+            title: "ยืนยันบันทึกร่าง",
+            description: "",
+            confirmText: "บันทึก",
+          });
+          setConfirmAction(() => saveDraft); 
+          setConfirmOpen(true);
+        }}
+        onSubmit={() => {
+          setConfirmConfig({
+            title: "ยืนยันส่งผลตรวจ",
+            description: "",
+            confirmText: "ส่งผลตรวจ",
+          });
+          setConfirmAction(() => handleSubmit); 
+          setConfirmOpen(true);
+        }}
         accentColor={THEME_ACCENT}
         gradient={THEME_GRADIENT}
       />
@@ -494,7 +537,7 @@ const QcPineapplePage = () => {
       />
 
       {/* Confirm Modal */}
-      <ConfirmDialog
+      {/* <ConfirmDialog
         open={confirmOpen}
         title="ยืนยันการบันทึกข้อมูล"
         description="กรุณาตรวจสอบข้อมูลก่อนยืนยัน"
@@ -504,6 +547,20 @@ const QcPineapplePage = () => {
         confirmColor={THEME_NAVY}
         onCancel={() => setConfirmOpen(false)}
         onConfirm={handleSubmit}
+      /> */}
+      <ConfirmDialog
+        open={confirmOpen}
+        title={confirmConfig.title}
+        description={confirmConfig.description}
+        confirmText={confirmConfig.confirmText}
+        cancelText="ย้อนกลับ"
+        accentColor={THEME_ACCENT}
+        confirmColor={THEME_NAVY}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => {
+          confirmAction?.(); // 🔥 เรียก function ที่ set มา
+          setConfirmOpen(false);
+        }}
       />
     </Box>
   );
