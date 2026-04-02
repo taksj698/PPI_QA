@@ -164,15 +164,9 @@ const QcPineapplePage = () => {
                         } as const)[selectedTruck.qcState ?? 0]}
                       />
                     </Stack>
-
-
-
-
-
-
                     <Stack direction="row" spacing={1} alignItems="center">
                       <TicketIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                      <Typography variant="body2" color="textSecondary" fontWeight={700}>{selectedTruck.ticketOutCode}</Typography>
+                      <Typography variant="body2" color="textSecondary" fontWeight={700}>{selectedTruck.sequenceId}</Typography>
                     </Stack>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <BusinessIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
@@ -509,7 +503,7 @@ const QcPineapplePage = () => {
             description: "",
             confirmText: "บันทึก",
           });
-          setConfirmAction(() => saveDraft); 
+          setConfirmAction(() => saveDraft);
           setConfirmOpen(true);
         }}
         onSubmit={() => {
@@ -518,7 +512,7 @@ const QcPineapplePage = () => {
             description: "",
             confirmText: "ส่งผลตรวจ",
           });
-          setConfirmAction(() => handleSubmit); 
+          setConfirmAction(() => handleSubmit);
           setConfirmOpen(true);
         }}
         accentColor={THEME_ACCENT}
