@@ -79,7 +79,8 @@ const QcPineapplePage = () => {
     confirmAction,
     confirmConfig,
     setConfirmAction,
-    setConfirmConfig
+    setConfirmConfig,
+    handleRemarkChange
   } = useQcPineapple();
 
 
@@ -470,12 +471,14 @@ const QcPineapplePage = () => {
                           <TableCell>
                             <InputBase
                               placeholder="..."
-                              value={rowRemarks[item.id] || ""}
+                              value={rowRemarks[`9_${item.id}`] || ""}
                               onChange={(e) =>
-                                setRowRemarks({
-                                  ...rowRemarks,
-                                  [item.id]: e.target.value,
-                                })
+                                handleRemarkChange(
+                                  groupName.group,
+                                  9,
+                                  item.id,
+                                  e.target.value
+                                )
                               }
                               sx={{ fontSize: "0.8rem", width: "100%" }}
                             />

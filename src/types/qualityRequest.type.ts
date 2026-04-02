@@ -10,8 +10,8 @@ export interface TbQualityDetail {
   qualityRuleCode: string;
   dimensionType: string;
   dimensionCode: string;
-  dimensionValue: number;
-  dimensionUnit: string;
+  dimensionValue: number | null;
+  dimensionUnit: string | null;
   remark: string | null;
 }
 
