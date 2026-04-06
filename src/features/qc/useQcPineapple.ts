@@ -142,6 +142,7 @@ export const useQcPineapple = () => {
         const allDetails = apiData.flatMap(q => q.tbQualityDetails);
         const mappedValues = mapQcToValues(allDetails);
         setRowRemarks(mapQcToRemarks(allDetails));
+        setEstimatedWeights(mapEstimatedWeights(allDetails));
         setValues(mappedValues);
     };
 
@@ -186,6 +187,25 @@ export const useQcPineapple = () => {
         });
 
         return newRemarks;
+    };
+    const mapEstimatedWeights = (
+        qualityDetails: (QualityDetail | TbQualityDetail)[]
+    ) => {
+        const newEstimatedWeights: EstimatedWeightState = {};
+
+        qualityDetails.forEach((d) => {
+            if (d.dimensionType === DIMENSION_TYPE.ESTIMATE) {
+                const match = d.qualityRuleCode.match(/R(\d+)_C(\d+)/);
+
+                if (match) {
+                    const rowId = parseInt(match[1], 10);
+                    const colId = match[2];
+                    newEstimatedWeights[`${colId}_${rowId}`] = d.remark || "";
+                }
+            }
+        });
+
+        return newEstimatedWeights;
     };
 
 
@@ -272,6 +292,36 @@ export const useQcPineapple = () => {
 
         updateDetail(groupName, detail);
     };
+
+    const handleEstimatedWeightsChange = (
+        groupName: string,
+        roundId: number,
+        criteriaId: string,
+        val: string
+    ) => {
+        // เก็บลง state UI
+        setEstimatedWeights(prev => ({
+            ...prev,
+            [`${roundId}_${criteriaId}`]: val
+        }));
+
+        const code = buildCode(
+            groupName,
+            DIMENSION_TYPE.ESTIMATE,
+            criteriaId,
+            roundId
+        );
+
+        const detail = createDetail(
+            code,
+            DIMENSION_TYPE.ESTIMATE,
+            null, // 👈 หรือ "" ก็ได้
+            null,
+            val
+        );
+
+        updateDetail(groupName, detail);
+    };
     // action handlers
     const saveDraft = async () => {
         setConfirmOpen(false);
@@ -349,7 +399,9 @@ export const useQcPineapple = () => {
         value: any,
         remark?: string
     ): TbQualityDetail => {
-        const isRemark = dimensionType === DIMENSION_TYPE.REMARK;
+        const isTextType =
+            dimensionType === DIMENSION_TYPE.REMARK ||
+            dimensionType === DIMENSION_TYPE.ESTIMATE;
 
         return {
             id: 0,
@@ -357,13 +409,13 @@ export const useQcPineapple = () => {
             qualityRuleCode,
             dimensionType,
             dimensionCode: qualityRuleCode,
-            dimensionValue: isRemark
+            dimensionValue: isTextType
                 ? null
                 : value === "" || value === null || isNaN(Number(value))
                     ? null
                     : Number(value),
             dimensionUnit,
-            remark: isRemark ? remark ?? value ?? "" : null
+            remark: isTextType ? (remark ?? value ?? "") : null
         };
     };
     const updateDetail = (groupName: string, detail: TbQualityDetail) => {
@@ -404,10 +456,13 @@ export const useQcPineapple = () => {
 
             let newDetails = [...details];
 
-            const isEmpty =
-                detail.dimensionType === DIMENSION_TYPE.REMARK
-                    ? !detail.remark || detail.remark.trim() === ""
-                    : detail.dimensionValue === null;
+            const isTextType =
+                detail.dimensionType === DIMENSION_TYPE.REMARK ||
+                detail.dimensionType === DIMENSION_TYPE.ESTIMATE;
+
+            const isEmpty = isTextType
+                ? !(detail.remark ?? "").trim()
+                : detail.dimensionValue === null;
 
             // 🗑 delete
             if (isEmpty) {
@@ -475,7 +530,8 @@ export const useQcPineapple = () => {
         confirmConfig,
         setConfirmAction,
         setConfirmConfig,
-        handleRemarkChange
+        handleRemarkChange,
+        handleEstimatedWeightsChange,
     };
 
 }

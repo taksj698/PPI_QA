@@ -80,7 +80,8 @@ const QcPineapplePage = () => {
     confirmConfig,
     setConfirmAction,
     setConfirmConfig,
-    handleRemarkChange
+    handleRemarkChange,
+    handleEstimatedWeightsChange
   } = useQcPineapple();
 
 
@@ -458,13 +459,22 @@ const QcPineapplePage = () => {
                           <TableCell>
                             <InputBase
                               placeholder="..."
-                              value={estimatedWeights[item.id] || ""}
+                              value={estimatedWeights[`9_${item.id}`] || ""}
                               onChange={(e) =>
-                                setEstimatedWeights({
-                                  ...estimatedWeights,
-                                  [item.id]: e.target.value,
-                                })
+                                handleEstimatedWeightsChange(
+                                  groupName.group,
+                                  9,
+                                  item.id,
+                                  e.target.value
+                                )
                               }
+                              // value={estimatedWeights[item.id] || ""}
+                              // onChange={(e) =>
+                              //   setEstimatedWeights({
+                              //     ...estimatedWeights,
+                              //     [item.id]: e.target.value,
+                              //   })
+                              // }
                               sx={{ fontSize: "0.8rem", width: "100%" }}
                             />
                           </TableCell>
