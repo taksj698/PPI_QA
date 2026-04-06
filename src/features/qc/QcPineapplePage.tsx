@@ -548,13 +548,13 @@ const QcPineapplePage = () => {
                                   colSpan={rounds.length + 6}
                                   sx={{ bgcolor: "#F5F5F5", py: 1 }}
                                 >
-                                  <Stack direction="column" spacing={1}>
+                                  <Stack direction="row" spacing={2}>
                                     <Stack
                                       direction="row"
                                       spacing={1}
                                       alignItems="center"
                                     >
-                                      <Typography variant="caption" sx={{ minWidth: 90 }}>
+                                      <Typography variant="caption">
                                         จำนวน สุ่ม:
                                       </Typography>
                                       <Select
