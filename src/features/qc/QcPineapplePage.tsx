@@ -73,7 +73,8 @@ const QcPineapplePage = () => {
     searchQuery,
     setSearchQuery,
     isSearching,
-    setSelectedTruck, confirmOpen,
+    setSelectedTruck, 
+    confirmOpen,
     handleSubmit,
     saveDraft,
     confirmAction,
@@ -81,8 +82,18 @@ const QcPineapplePage = () => {
     setConfirmAction,
     setConfirmConfig,
     handleRemarkChange,
-    handleEstimatedWeightsChange
+    handleEstimatedWeightsChange,
+    getSectionAverage,
+    getSectionRounds,
+    getSectionCriteria,
   } = useQcPineapple();
+
+  const getGroupTotal = (group: string): number => {
+    return ASSESSMENT_CRITERIA.filter((c) => c.group === group).reduce(
+      (sum, item) => sum + getRowTotal(item.id),
+      0,
+    );
+  };
 
 
 
@@ -393,6 +404,11 @@ const QcPineapplePage = () => {
                             const isOver = groupSum > targetLimit + 0.001;
                             const currentVal =
                               values[`${r.id}_${item.id}`] || "";
+                            
+                            // สำหรับ NITRATE: ตรวจแต่ละค่าไม่เกิน globalSampleCount
+                            const isNitrateOverLimit = groupName.group === "NITRATE" && 
+                              currentVal && 
+                              parseFloat(currentVal) > globalSampleCount;
 
                             return (
                               <TableCell key={r.id} align="center">
@@ -410,7 +426,7 @@ const QcPineapplePage = () => {
                                       e.target.value,
                                     );
                                   }}
-                                  error={isOver}
+                                  error={groupName.group === "NITRATE" ? isNitrateOverLimit : isOver}
                                   inputProps={{
                                     style: {
                                       textAlign: "center",
@@ -448,13 +464,14 @@ const QcPineapplePage = () => {
                               bgcolor: "#FFFDF0",
                             }}
                           >
-                            {totalSamplesOverall > 0
-                              ? (
-                                (getRowTotal(item.id) / totalSamplesOverall) *
-                                100
-                              ).toFixed(1)
-                              : "0"}
-                            %
+                            {groupName.group === "NITRATE" ? "-" : (() => {
+                              const rowTotal = getRowTotal(item.id);
+                              const groupTotal = getGroupTotal(groupName.group);
+                              return groupTotal > 0
+                                ? ((rowTotal / groupTotal) * 100).toFixed(1)
+                                : "0";
+                            })()}
+                            {groupName.group !== "NITRATE" && "%"}
                           </TableCell>
                           <TableCell>
                             <InputBase
@@ -495,6 +512,74 @@ const QcPineapplePage = () => {
                           </TableCell>
                         </TableRow>
                       ))}
+
+                      {/* Section Averages สำหรับ NITRATE group */}
+                      {groupName.group === "NITRATE" && (
+                        <>
+                          {[1, 2, 3].map((sectionNum) => (
+                            <TableRow key={`section-${sectionNum}`}>
+                              <TableCell
+                                sx={{
+                                  py: 1.5,
+                                  pl: 3,
+                                  position: "sticky",
+                                  left: 0,
+                                  bgcolor: "#E3F2FD",
+                                  zIndex: 700,
+                                  borderRight: "1px solid #E0E0E0",
+                                }}
+                              >
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    fontWeight: 800,
+                                    color: THEME_NAVY,
+                                  }}
+                                >
+                                  ค่าเฉลี่ย {getSectionRounds(sectionNum).map((r) => rounds.find((x) => x.id === r)?.name).join("-")}
+                                </Typography>
+                              </TableCell>
+                              <TableCell
+                                align="center"
+                                sx={{
+                                  py: 1.5,
+                                  bgcolor: "#E3F2FD",
+                                  fontWeight: 900,
+                                  color: THEME_NAVY,
+                                }}
+                              >
+                                <TextField
+                                  variant="outlined"
+                                  size="small"
+                                  type="number"
+                                  value={getSectionAverage(sectionNum).toFixed(2)}
+                                  inputProps={{
+                                    readOnly: true,
+                                    style: {
+                                      textAlign: "center",
+                                      fontWeight: 800,
+                                    },
+                                  }}
+                                  sx={{
+                                    width: 70,
+                                    "& .MuiOutlinedInput-root": {
+                                      borderRadius: 1.5,
+                                      height: 36,
+                                      bgcolor: "white",
+                                    },
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell
+                                colSpan={rounds.length + 2}
+                                sx={{
+                                  bgcolor: "#E3F2FD",
+                                }}
+                              />
+                            </TableRow>
+                          ))}
+                        </>
+                      )}
                     </React.Fragment>
                   ))}
                 </TableBody>

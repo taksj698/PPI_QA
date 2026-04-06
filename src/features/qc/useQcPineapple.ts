@@ -20,6 +20,10 @@ export const useQcPineapple = () => {
         { id: 3, name: "R3" },
         { id: 4, name: "R4" },
         { id: 5, name: "R5" },
+        { id: 6, name: "R6" },
+        { id: 7, name: "R7" },
+        { id: 8, name: "R8" },
+        { id: 9, name: "R9" },
     ]);
     const [values, setValues] = useState<ValuesState>({});
     const [rowRemarks, setRowRemarks] = useState<RemarksState>({});
@@ -64,11 +68,45 @@ export const useQcPineapple = () => {
 
     const getRowTotal = (criteriaId: string): number => {
         return rounds.reduce(
-            (sum, r) => sum + getNumericValue(r.id, criteriaId),
+            (sum, r) => {
+                const val = values[`${r.id}_${criteriaId}`];
+                if (val === "" || val === undefined) return sum;
+                return sum + (parseFloat(val) || 0);
+            },
             0,
         );
     };
 
+    // ช่วง rounds สำหรับ section: 1 → [1,2], 2 → [3,4], 3 → [5,6]
+    const getSectionRounds = (sectionNum: number): number[] => {
+        const startIdx = (sectionNum - 1) * 2;
+        return [rounds[startIdx]?.id, rounds[startIdx + 1]?.id].filter((id) => id !== undefined) as number[];
+    };
+
+    // แบ่ง section แต่ละ 2 rounds
+    const getSectionCriteria = (sectionNum: number): string[] => {
+        const criteriaByGroup = ASSESSMENT_CRITERIA.filter((c) => c.group === "NITRATE").map((c) => c.id);
+        // เลือกเกณฑ์ NITRATE ตัวแรกเท่านั้น
+        return [criteriaByGroup[0]].filter((id) => id !== undefined);
+    };
+
+    // คำนวณค่าเฉลี่ยของ section (ผลรวม / จำนวนลูกที่สุ่มได้)
+    const getSectionAverage = (sectionNum: number): number => {
+        const roundRange = getSectionRounds(sectionNum);
+        const criteria = getSectionCriteria(sectionNum);
+
+        let sum = 0;
+        roundRange.forEach((roundId) => {
+            criteria.forEach((criteriaId) => {
+                const val = values[`${roundId}_${criteriaId}`];
+                if (val && val !== "") {
+                    sum += parseFloat(val) || 0;
+                }
+            });
+        });
+
+        return globalSampleCount > 0 ? sum / globalSampleCount : 0;
+    };
 
     const targetLimit = globalSampleCount;
     const totalSamplesOverall = rounds.length * targetLimit;
@@ -504,7 +542,6 @@ export const useQcPineapple = () => {
         searchQuery,
         confirmOpen,
         isLoading,
-        // filteredTrucks,
         hasValidationError,
         targetLimit,
         totalSamplesOverall,
@@ -532,6 +569,9 @@ export const useQcPineapple = () => {
         setConfirmConfig,
         handleRemarkChange,
         handleEstimatedWeightsChange,
+        getSectionAverage,
+        getSectionRounds,
+        getSectionCriteria,
     };
 
 }
