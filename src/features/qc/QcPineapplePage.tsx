@@ -17,7 +17,6 @@ import {
   Stack,
   Chip,
   Button,
-  InputBase,
   Fade,
   TextField,
   Divider
@@ -333,10 +332,10 @@ const QcPineapplePage = () => {
                     >
                       %
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 800, bgcolor: "#F8F9FA" }}>
+                    <TableCell sx={{ fontWeight: 800, bgcolor: "#F8F9FA", minWidth: 220 }}>
                       น้ำหนักประมาณการต่อคัน
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 800, bgcolor: "#F8F9FA" }}>
+                    <TableCell sx={{ fontWeight: 800, bgcolor: "#F8F9FA", minWidth: 220 }}>
                       หมายเหตุ
                     </TableCell>
                   </TableRow>
@@ -370,7 +369,7 @@ const QcPineapplePage = () => {
                           </Typography>
                         </TableCell>
                         <TableCell
-                          colSpan={rounds.length + 6}
+                          colSpan={rounds.length + 4}
                           sx={{
                             bgcolor: groupName.name.includes("สรุป")
                               ? "#E8F5E9"
@@ -496,12 +495,12 @@ const QcPineapplePage = () => {
                                     -
                                   </TableCell>
 
-                                  <TableCell />
-                                  <TableCell />
-
                                   <TableCell>
-                                    <InputBase
+                                    <TextField
+                                      variant="outlined"
+                                      size="small"
                                       placeholder="..."
+                                      fullWidth
                                       value={estimatedWeights[`9_${item.id}`] || ""}
                                       onChange={(e) =>
                                         handleEstimatedWeightsChange(
@@ -511,12 +510,16 @@ const QcPineapplePage = () => {
                                           e.target.value,
                                         )
                                       }
-                                      sx={{ fontSize: "0.8rem", width: "100%" }}
+                                      inputProps={{ style: { fontSize: '0.8rem' } }}
+                                      sx={{ minWidth: 220 }}
                                     />
                                   </TableCell>
                                   <TableCell>
-                                    <InputBase
+                                    <TextField
+                                      variant="outlined"
+                                      size="small"
                                       placeholder="..."
+                                      fullWidth
                                       value={rowRemarks[`9_${item.id}`] || ""}
                                       onChange={(e) =>
                                         handleRemarkChange(
@@ -526,7 +529,8 @@ const QcPineapplePage = () => {
                                           e.target.value,
                                         )
                                       }
-                                      sx={{ fontSize: "0.8rem", width: "100%" }}
+                                      inputProps={{ style: { fontSize: '0.8rem' } }}
+                                      sx={{ minWidth: 220 }}
                                     />
                                   </TableCell>
                                 </TableRow>
@@ -545,7 +549,7 @@ const QcPineapplePage = () => {
                                   </Typography>
                                 </TableCell>
                                 <TableCell
-                                  colSpan={rounds.length + 6}
+                                  colSpan={rounds.length + 4}
                                   sx={{ bgcolor: "#F5F5F5", py: 1 }}
                                 >
                                   <Stack direction="row" spacing={2}>
@@ -705,11 +709,12 @@ const QcPineapplePage = () => {
                                 })()}
                                 {groupName.group !== "NITRATE" && "%"}
                               </TableCell>
-                              <TableCell />
-                              <TableCell />
                               <TableCell>
-                                <InputBase
+                                <TextField
+                                  variant="outlined"
+                                  size="small"
                                   placeholder="..."
+                                  fullWidth
                                   value={estimatedWeights[`9_${item.id}`] || ""}
                                   onChange={(e) =>
                                     handleEstimatedWeightsChange(
@@ -719,12 +724,16 @@ const QcPineapplePage = () => {
                                       e.target.value
                                     )
                                   }
-                                  sx={{ fontSize: "0.8rem", width: "100%" }}
+                                  inputProps={{ style: { fontSize: '0.8rem' } }}
+                                  sx={{ minWidth: 220 }}
                                 />
                               </TableCell>
                               <TableCell>
-                                <InputBase
+                                <TextField
+                                  variant="outlined"
+                                  size="small"
                                   placeholder="..."
+                                  fullWidth
                                   value={rowRemarks[`9_${item.id}`] || ""}
                                   onChange={(e) =>
                                     handleRemarkChange(
@@ -734,7 +743,8 @@ const QcPineapplePage = () => {
                                       e.target.value
                                     )
                                   }
-                                  sx={{ fontSize: "0.8rem", width: "100%" }}
+                                  inputProps={{ style: { fontSize: '0.8rem' } }}
+                                  sx={{ minWidth: 220 }}
                                 />
                               </TableCell>
                             </TableRow>
