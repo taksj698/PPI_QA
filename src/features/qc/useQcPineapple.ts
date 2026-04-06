@@ -28,6 +28,7 @@ export const useQcPineapple = () => {
     const [values, setValues] = useState<ValuesState>({});
     const [rowRemarks, setRowRemarks] = useState<RemarksState>({});
     const [estimatedWeights, setEstimatedWeights] = useState<EstimatedWeightState>({});
+    const [nitrateSampleCounts, setNitrateSampleCounts] = useState<Record<string, number>>({});
 
     // UI States
     const [openSearch, setOpenSearch] = useState<boolean>(false);
@@ -125,6 +126,10 @@ export const useQcPineapple = () => {
 
 
 
+
+    const handleNitrateSampleCountChange = (key: string, value: number) => {
+        setNitrateSampleCounts(prev => ({ ...prev, [key]: value }));
+    };
 
     const chooseTruck = async (truck: QcCheck) => {
         setSelectedTruck(truck);
@@ -562,6 +567,8 @@ export const useQcPineapple = () => {
         getRoundTotalForGroup,
         handleSubmit,
         handleSampleCountChange,
+        handleNitrateSampleCountChange,
+        nitrateSampleCounts,
         saveDraft,
         confirmAction,
         confirmConfig,

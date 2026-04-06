@@ -54,6 +54,8 @@ const QcPineapplePage = () => {
     selectedTruck,
     globalSampleCount,
     handleSampleCountChange,
+    nitrateSampleCounts,
+    handleNitrateSampleCountChange,
     setRounds,
     rounds,
     getRoundTotalForGroup,
@@ -93,6 +95,26 @@ const QcPineapplePage = () => {
       (sum, item) => sum + getRowTotal(item.id),
       0,
     );
+  };
+
+  const NITRATE_PAIRS = [
+    { key: "20-21", label: "เฉลี่ย 1-2", itemIds: ["20", "21"] },
+    { key: "22-23", label: "เฉลี่ย 3-4", itemIds: ["22", "23"] },
+    { key: "24-25", label: "เฉลี่ย 5-6", itemIds: ["24", "25"] },
+  ];
+
+  const getNitratePairAverage = (itemIds: string[]) => {
+    const valuesList = rounds
+      .flatMap((r) =>
+        itemIds
+          .map((id) => values[`${r.id}_${id}`])
+          .filter((v) => v !== undefined && v !== "")
+          .map((v) => parseFloat(v as string)),
+      )
+      .filter((num) => !Number.isNaN(num));
+
+    if (!valuesList.length) return "";
+    return (valuesList.reduce((sum, num) => sum + num, 0) / valuesList.length).toFixed(2);
   };
 
 
@@ -348,7 +370,7 @@ const QcPineapplePage = () => {
                           </Typography>
                         </TableCell>
                         <TableCell
-                          colSpan={rounds.length + 4}
+                          colSpan={rounds.length + 6}
                           sx={{
                             bgcolor: groupName.name.includes("สรุป")
                               ? "#E8F5E9"
@@ -358,228 +380,365 @@ const QcPineapplePage = () => {
                         />
                       </TableRow>
 
-                      {ASSESSMENT_CRITERIA.filter(
-                        (c) => c.group === groupName.group,
-                      ).map((item) => (
-                        <TableRow key={item.id} hover>
-                          <TableCell
-                            sx={{
-                              py: 1.5,
-                              pl: 3,
-                              position: "sticky",
-                              left: 0,
-                              bgcolor: "white",
-                              zIndex: 700,
-                              borderRight: "1px solid #EEE",
-                            }}
-                          >
-                            <Stack
-                              direction="row"
-                              spacing={1.5}
-                              alignItems="center"
-                            >
-                              <Box
-                                sx={{ display: "flex", alignItems: "center" }}
-                              >
-                                {item.icon}
-                              </Box>
-                              <Typography
-                                variant="body2"
-                                sx={{
-                                  fontWeight: groupName.name.includes("สรุป")
-                                    ? 800
-                                    : 500,
-                                }}
-                              >
-                                {item.label}
-                              </Typography>
-                            </Stack>
-                          </TableCell>
-
-                          {rounds.map((r) => {
-                            const groupSum = getRoundTotalForGroup(
-                              r.id,
-                              groupName.group,
+                      {groupName.group === "NITRATE"
+                        ? [
+                            { key: "20-21", label: "เฉลี่ย 1-2", itemIds: ["20", "21"] },
+                            { key: "22-23", label: "เฉลี่ย 3-4", itemIds: ["22", "23"] },
+                            { key: "24-25", label: "เฉลี่ย 5-6", itemIds: ["24", "25"] },
+                          ].flatMap((pair) => {
+                            const pairItems = ASSESSMENT_CRITERIA.filter((c) =>
+                              pair.itemIds.includes(c.id),
                             );
-                            const isOver = groupSum > targetLimit + 0.001;
-                            const currentVal =
-                              values[`${r.id}_${item.id}`] || "";
-                            
-                            // สำหรับ NITRATE: ตรวจแต่ละค่าไม่เกิน globalSampleCount
-                            const isNitrateOverLimit = groupName.group === "NITRATE" && 
-                              currentVal && 
-                              parseFloat(currentVal) > globalSampleCount;
 
-                            return (
-                              <TableCell key={r.id} align="center">
-                                <TextField
-                                  variant="outlined"
-                                  size="small"
-                                  autoComplete="off"
-                                  type="number"
-                                  value={currentVal}
-                                  onChange={(e) => {
-                                    handleValueChange(
-                                      groupName.group,
+                            return [
+                              ...pairItems.map((item) => (
+                                <TableRow key={item.id} hover>
+                                  <TableCell
+                                    sx={{
+                                      py: 1.5,
+                                      pl: 3,
+                                      position: "sticky",
+                                      left: 0,
+                                      bgcolor: "white",
+                                      zIndex: 700,
+                                      borderRight: "1px solid #EEE",
+                                    }}
+                                  >
+                                    <Stack
+                                      direction="row"
+                                      spacing={1.5}
+                                      alignItems="center"
+                                    >
+                                      <Box
+                                        sx={{ display: "flex", alignItems: "center" }}
+                                      >
+                                        {item.icon}
+                                      </Box>
+                                      <Typography
+                                        variant="body2"
+                                        sx={{
+                                          fontWeight: groupName.name.includes("สรุป")
+                                            ? 800
+                                            : 500,
+                                        }}
+                                      >
+                                        {item.label}
+                                      </Typography>
+                                    </Stack>
+                                  </TableCell>
+
+                                  {rounds.map((r) => {
+                                    const groupSum = getRoundTotalForGroup(
                                       r.id,
-                                      item.id,
-                                      e.target.value,
+                                      groupName.group,
                                     );
-                                  }}
-                                  error={groupName.group === "NITRATE" ? isNitrateOverLimit : isOver}
-                                  inputProps={{
-                                    style: {
-                                      textAlign: "center",
-                                      fontWeight: 800,
-                                    },
-                                  }}
+                                    const isOver = groupSum > targetLimit + 0.001;
+                                    const currentVal = values[`${r.id}_${item.id}`] || "";
+                                    const isNitrateOverLimit =
+                                      groupName.group === "NITRATE" &&
+                                      currentVal &&
+                                      parseFloat(currentVal) > globalSampleCount;
+
+                                    return (
+                                      <TableCell key={r.id} align="center">
+                                        <TextField
+                                          variant="outlined"
+                                          size="small"
+                                          autoComplete="off"
+                                          type="number"
+                                          value={currentVal}
+                                          onChange={(e) => {
+                                            handleValueChange(
+                                              groupName.group,
+                                              r.id,
+                                              item.id,
+                                              e.target.value,
+                                            );
+                                          }}
+                                          error={!!(groupName.group === "NITRATE" ? isNitrateOverLimit : isOver)}
+                                          inputProps={{
+                                            style: {
+                                              textAlign: "center",
+                                              fontWeight: 800,
+                                            },
+                                          }}
+                                          sx={{
+                                            width: 70,
+                                            "& .MuiOutlinedInput-root": {
+                                              borderRadius: 1.5,
+                                              height: 36,
+                                            },
+                                          }}
+                                        />
+                                      </TableCell>
+                                    );
+                                  })}
+
+                                  <TableCell
+                                    align="center"
+                                    sx={{
+                                      fontWeight: 900,
+                                      bgcolor: "#F9FCFF",
+                                      color: THEME_NAVY,
+                                    }}
+                                  >
+                                    {getRowTotal(item.id)}
+                                  </TableCell>
+
+                                  <TableCell
+                                    align="center"
+                                    sx={{
+                                      fontWeight: 900,
+                                      color: "#F57F17",
+                                      bgcolor: "#FFFDF0",
+                                    }}
+                                  >
+                                    -
+                                  </TableCell>
+
+                                  <TableCell />
+                                  <TableCell />
+
+                                  <TableCell>
+                                    <InputBase
+                                      placeholder="..."
+                                      value={estimatedWeights[`9_${item.id}`] || ""}
+                                      onChange={(e) =>
+                                        handleEstimatedWeightsChange(
+                                          groupName.group,
+                                          9,
+                                          item.id,
+                                          e.target.value,
+                                        )
+                                      }
+                                      sx={{ fontSize: "0.8rem", width: "100%" }}
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <InputBase
+                                      placeholder="..."
+                                      value={rowRemarks[`9_${item.id}`] || ""}
+                                      onChange={(e) =>
+                                        handleRemarkChange(
+                                          groupName.group,
+                                          9,
+                                          item.id,
+                                          e.target.value,
+                                        )
+                                      }
+                                      sx={{ fontSize: "0.8rem", width: "100%" }}
+                                    />
+                                  </TableCell>
+                                </TableRow>
+                              )),
+                              <TableRow key={`summary-${pair.key}`}>
+                                <TableCell
                                   sx={{
-                                    width: 70,
-                                    "& .MuiOutlinedInput-root": {
-                                      borderRadius: 1.5,
-                                      height: 36,
-                                    },
+                                    py: 1.5,
+                                    pl: 3,
+                                    bgcolor: "#F5F5F5",
+                                    borderRight: "1px solid #EEE",
                                   }}
-                                />
-                              </TableCell>
-                            );
-                          })}
-
-                          <TableCell
-                            align="center"
-                            sx={{
-                              fontWeight: 900,
-                              bgcolor: "#F9FCFF",
-                              color: THEME_NAVY,
-                            }}
-                          >
-                            {getRowTotal(item.id)}
-                          </TableCell>
-
-                          <TableCell
-                            align="center"
-                            sx={{
-                              fontWeight: 900,
-                              color: "#F57F17",
-                              bgcolor: "#FFFDF0",
-                            }}
-                          >
-                            {groupName.group === "NITRATE" ? "-" : (() => {
-                              const rowTotal = getRowTotal(item.id);
-                              const groupTotal = getGroupTotal(groupName.group);
-                              return groupTotal > 0
-                                ? ((rowTotal / groupTotal) * 100).toFixed(1)
-                                : "0";
-                            })()}
-                            {groupName.group !== "NITRATE" && "%"}
-                          </TableCell>
-                          <TableCell>
-                            <InputBase
-                              placeholder="..."
-                              value={estimatedWeights[`9_${item.id}`] || ""}
-                              onChange={(e) =>
-                                handleEstimatedWeightsChange(
-                                  groupName.group,
-                                  9,
-                                  item.id,
-                                  e.target.value
-                                )
-                              }
-                              // value={estimatedWeights[item.id] || ""}
-                              // onChange={(e) =>
-                              //   setEstimatedWeights({
-                              //     ...estimatedWeights,
-                              //     [item.id]: e.target.value,
-                              //   })
-                              // }
-                              sx={{ fontSize: "0.8rem", width: "100%" }}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <InputBase
-                              placeholder="..."
-                              value={rowRemarks[`9_${item.id}`] || ""}
-                              onChange={(e) =>
-                                handleRemarkChange(
-                                  groupName.group,
-                                  9,
-                                  item.id,
-                                  e.target.value
-                                )
-                              }
-                              sx={{ fontSize: "0.8rem", width: "100%" }}
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-
-                      {/* Section Averages สำหรับ NITRATE group */}
-                      {groupName.group === "NITRATE" && (
-                        <>
-                          {[1, 2, 3].map((sectionNum) => (
-                            <TableRow key={`section-${sectionNum}`}>
+                                >
+                                  <Typography variant="body2" fontWeight={700}>
+                                    {pair.label}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell
+                                  colSpan={rounds.length + 6}
+                                  sx={{ bgcolor: "#F5F5F5", py: 1 }}
+                                >
+                                  <Stack direction="column" spacing={1}>
+                                    <Stack
+                                      direction="row"
+                                      spacing={1}
+                                      alignItems="center"
+                                    >
+                                      <Typography variant="caption" sx={{ minWidth: 90 }}>
+                                        จำนวน สุ่ม:
+                                      </Typography>
+                                      <Select
+                                        size="small"
+                                        value={nitrateSampleCounts[pair.key] || globalSampleCount}
+                                        onChange={(e) =>
+                                          handleNitrateSampleCountChange(
+                                            pair.key,
+                                            Number(e.target.value),
+                                          )
+                                        }
+                                        sx={{ minWidth: 100 }}
+                                      >
+                                        {[5, 10, 15, 20].map((val) => (
+                                          <MenuItem key={val} value={val}>
+                                            {val}
+                                          </MenuItem>
+                                        ))}
+                                      </Select>
+                                    </Stack>
+                                    <Stack
+                                      direction="row"
+                                      spacing={1}
+                                      alignItems="center"
+                                    >
+                                      <Typography variant="caption" sx={{ minWidth: 90 }}>
+                                        ค่าเฉลี่ย:
+                                      </Typography>
+                                      <TextField
+                                        size="small"
+                                        type="number"
+                                        value={getNitratePairAverage(pair.itemIds)}
+                                        InputProps={{ readOnly: true }}
+                                        sx={{ minWidth: 100 }}
+                                      />
+                                    </Stack>
+                                  </Stack>
+                                </TableCell>
+                              </TableRow>,
+                            ];
+                          })
+                        : ASSESSMENT_CRITERIA.filter(
+                            (c) => c.group === groupName.group,
+                          ).map((item) => (
+                            <TableRow key={item.id} hover>
                               <TableCell
                                 sx={{
                                   py: 1.5,
                                   pl: 3,
                                   position: "sticky",
                                   left: 0,
-                                  bgcolor: "#E3F2FD",
+                                  bgcolor: "white",
                                   zIndex: 700,
-                                  borderRight: "1px solid #E0E0E0",
+                                  borderRight: "1px solid #EEE",
                                 }}
                               >
-                                <Typography
-                                  variant="body2"
-                                  sx={{
-                                    fontWeight: 800,
-                                    color: THEME_NAVY,
-                                  }}
+                                <Stack
+                                  direction="row"
+                                  spacing={1.5}
+                                  alignItems="center"
                                 >
-                                  ค่าเฉลี่ย {getSectionRounds(sectionNum).map((r) => rounds.find((x) => x.id === r)?.name).join("-")}
-                                </Typography>
+                                  <Box
+                                    sx={{ display: "flex", alignItems: "center" }}
+                                  >
+                                    {item.icon}
+                                  </Box>
+                                  <Typography
+                                    variant="body2"
+                                    sx={{
+                                      fontWeight: groupName.name.includes("สรุป")
+                                        ? 800
+                                        : 500,
+                                    }}
+                                  >
+                                    {item.label}
+                                  </Typography>
+                                </Stack>
                               </TableCell>
+
+                              {rounds.map((r) => {
+                                const groupSum = getRoundTotalForGroup(
+                                  r.id,
+                                  groupName.group,
+                                );
+                                const isOver = groupSum > targetLimit + 0.001;
+                                const currentVal = values[`${r.id}_${item.id}`] || "";
+
+                                return (
+                                  <TableCell key={r.id} align="center">
+                                    <TextField
+                                      variant="outlined"
+                                      size="small"
+                                      autoComplete="off"
+                                      type="number"
+                                      value={currentVal}
+                                      onChange={(e) => {
+                                        handleValueChange(
+                                          groupName.group,
+                                          r.id,
+                                          item.id,
+                                          e.target.value,
+                                        );
+                                      }}
+                                      error={!!(groupName.group === "NITRATE" ? false : isOver)}
+                                      inputProps={{
+                                        style: {
+                                          textAlign: "center",
+                                          fontWeight: 800,
+                                        },
+                                      }}
+                                      sx={{
+                                        width: 70,
+                                        "& .MuiOutlinedInput-root": {
+                                          borderRadius: 1.5,
+                                          height: 36,
+                                        },
+                                      }}
+                                    />
+                                  </TableCell>
+                                );
+                              })}
+
                               <TableCell
                                 align="center"
                                 sx={{
-                                  py: 1.5,
-                                  bgcolor: "#E3F2FD",
                                   fontWeight: 900,
+                                  bgcolor: "#F9FCFF",
                                   color: THEME_NAVY,
                                 }}
                               >
-                                <TextField
-                                  variant="outlined"
-                                  size="small"
-                                  type="number"
-                                  value={getSectionAverage(sectionNum).toFixed(2)}
-                                  inputProps={{
-                                    readOnly: true,
-                                    style: {
-                                      textAlign: "center",
-                                      fontWeight: 800,
-                                    },
-                                  }}
-                                  sx={{
-                                    width: 70,
-                                    "& .MuiOutlinedInput-root": {
-                                      borderRadius: 1.5,
-                                      height: 36,
-                                      bgcolor: "white",
-                                    },
-                                  }}
+                                {getRowTotal(item.id)}
+                              </TableCell>
+
+                              <TableCell
+                                align="center"
+                                sx={{
+                                  fontWeight: 900,
+                                  color: "#F57F17",
+                                  bgcolor: "#FFFDF0",
+                                }}
+                              >
+                                {groupName.group === "NITRATE" ? "-" : (() => {
+                                  const rowTotal = getRowTotal(item.id);
+                                  const groupTotal = getGroupTotal(groupName.group);
+                                  return groupTotal > 0
+                                    ? ((rowTotal / groupTotal) * 100).toFixed(1)
+                                    : "0";
+                                })()}
+                                {groupName.group !== "NITRATE" && "%"}
+                              </TableCell>
+                              <TableCell />
+                              <TableCell />
+                              <TableCell>
+                                <InputBase
+                                  placeholder="..."
+                                  value={estimatedWeights[`9_${item.id}`] || ""}
+                                  onChange={(e) =>
+                                    handleEstimatedWeightsChange(
+                                      groupName.group,
+                                      9,
+                                      item.id,
+                                      e.target.value
+                                    )
+                                  }
+                                  sx={{ fontSize: "0.8rem", width: "100%" }}
                                 />
                               </TableCell>
-                              <TableCell
-                                colSpan={rounds.length + 2}
-                                sx={{
-                                  bgcolor: "#E3F2FD",
-                                }}
-                              />
+                              <TableCell>
+                                <InputBase
+                                  placeholder="..."
+                                  value={rowRemarks[`9_${item.id}`] || ""}
+                                  onChange={(e) =>
+                                    handleRemarkChange(
+                                      groupName.group,
+                                      9,
+                                      item.id,
+                                      e.target.value
+                                    )
+                                  }
+                                  sx={{ fontSize: "0.8rem", width: "100%" }}
+                                />
+                              </TableCell>
                             </TableRow>
                           ))}
-                        </>
-                      )}
                     </React.Fragment>
                   ))}
                 </TableBody>
