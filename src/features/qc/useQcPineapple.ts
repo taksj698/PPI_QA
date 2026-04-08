@@ -326,25 +326,67 @@ export const useQcPineapple = () => {
         criteriaId: string,
         val: string,
     ) => {
-        setValues(prev => ({
-            ...prev,
-            [`${roundId}_${criteriaId}`]: val
-        }));
-        const code = buildCode(
-            groupName,
-            DIMENSION_TYPE.DETAIL,
-            criteriaId,
-            roundId
-        );
+        const newValues = { ...values, [`${roundId}_${criteriaId}`]: val };
+        setValues(newValues);
 
-        const detail = createDetail(
-            code,
+        const unit = groupName === "NITRATE" ? DIMENSION_UNIT.PPM : DIMENSION_UNIT.EACH;
+        const detailsToUpdate: TbQualityDetail[] = [];
+
+        // DETAIL record
+        detailsToUpdate.push(createDetail(
+            buildCode(groupName, DIMENSION_TYPE.DETAIL, criteriaId, roundId),
             DIMENSION_TYPE.DETAIL,
-            groupName === "NITRATE" ? DIMENSION_UNIT.PPM : DIMENSION_UNIT.EACH,
+            unit,
             val
-        );
+        ));
 
-        updateDetail(groupName, detail);
+        // TOTAL + AVG records (ยกเว้น NITRATE ที่แสดง "-")
+        if (groupName !== "NITRATE") {
+            const groupCriteria = ASSESSMENT_CRITERIA.filter(c => c.group === groupName);
+
+            const rowTotals = groupCriteria.map(c => ({
+                id: c.id,
+                total: rounds.reduce((sum, r) => {
+                    const v = newValues[`${r.id}_${c.id}`];
+                    return sum + (v && v !== "" ? parseFloat(v) || 0 : 0);
+                }, 0)
+            }));
+
+            const groupTotal = rowTotals.reduce((sum, rt) => sum + rt.total, 0);
+
+            groupCriteria.forEach(c => {
+                const rt = rowTotals.find(r => r.id === c.id)!;
+                const apiGroup = getApiGroupName(groupName);
+                const idx = getWithinGroupIndex(groupName, c.id);
+
+                // TOTAL
+                detailsToUpdate.push({
+                    id: 0,
+                    qualityId: 0,
+                    qualityRuleCode: `${apiGroup}_${DIMENSION_TYPE.TOTAL}${idx}`,
+                    dimensionType: DIMENSION_TYPE.TOTAL,
+                    dimensionCode: `${DIMENSION_TYPE.TOTAL}${idx}`,
+                    dimensionValue: rt.total > 0 ? rt.total : null,
+                    dimensionUnit: DIMENSION_UNIT.EACH,
+                    remark: null
+                });
+
+                // AVG (%)
+                const pct = groupTotal > 0 ? parseFloat(((rt.total / groupTotal) * 100).toFixed(2)) : null;
+                detailsToUpdate.push({
+                    id: 0,
+                    qualityId: 0,
+                    qualityRuleCode: `${apiGroup}_${DIMENSION_TYPE.AVG}${idx}`,
+                    dimensionType: DIMENSION_TYPE.AVG,
+                    dimensionCode: `${DIMENSION_TYPE.AVG}${idx}`,
+                    dimensionValue: pct && pct > 0 ? pct : null,
+                    dimensionUnit: DIMENSION_UNIT.PERCENT,
+                    remark: null
+                });
+            });
+        }
+
+        updateDetails(groupName, detailsToUpdate);
     };
     const handleRemarkChange = (
         groupName: string,
@@ -468,12 +510,19 @@ export const useQcPineapple = () => {
         }
     };
     // main functions for create/update qualityRequestList
+    const getApiGroupName = (group: string) => group === "FLAW" ? "OTHER" : group;
+
+    const getWithinGroupIndex = (group: string, criteriaId: string): number => {
+        const groupCriteria = ASSESSMENT_CRITERIA.filter(c => c.group === group);
+        return groupCriteria.findIndex(c => c.id === criteriaId) + 1;
+    };
+
     const buildCode = (
         group: string,
         type: string,
         criteriaId: string,
         roundId: number
-    ) => `${group}_${type}_R${criteriaId}_C${roundId}`;
+    ) => `${getApiGroupName(group)}_${type}_R${criteriaId}_C${roundId}`;
 
     const createDetail = (
         qualityRuleCode: string,
@@ -502,72 +551,69 @@ export const useQcPineapple = () => {
         };
     };
     const updateDetail = (groupName: string, detail: TbQualityDetail) => {
+        updateDetails(groupName, [detail]);
+    };
+
+    const updateDetails = (groupName: string, details: TbQualityDetail[]) => {
         setQualityRequestList(prev => {
-            const index = prev.findIndex(
-                item => item.qualityType === groupName
-            );
+            const index = prev.findIndex(item => item.qualityType === groupName);
             const dateformat = getLocalISOString(new Date()).slice(0, 10).replace(/-/g, "");
-            // 🔥 กรณี "ยังไม่มี group นี้" → สร้างใหม่
+
+            let baseItem: QualityRequest;
+            let currentDetails: TbQualityDetail[];
+
             if (index === -1) {
-                return [
-                    ...prev,
-                    {
-                        qualityId: 0,
-                        qualityCode: `QC_${groupName}_${dateformat}`,
-                        qualityType: groupName,
-                        planCode: `${groupName}_${dateformat}`,
-                        docId: selectedTruck?.sequenceId || "",
-                        docRefType: DOC_TYPE.WEIGHTDATA, //
-                        inspectorDateTime: inspectionStartTime ? getLocalISOString(inspectionStartTime) : getLocalISOString(new Date()),
-                        inspectorBy: inspectorBy,
-                        status: QUALITY_STATUS.PENDING,
-                        remark: "",
-                        tbQualityDetails: [detail] // 👈 สำคัญ
-                    }
-                ];
+                baseItem = {
+                    qualityId: 0,
+                    qualityCode: `QC_${groupName}_${dateformat}`,
+                    qualityType: groupName,
+                    planCode: `${groupName}_${dateformat}`,
+                    docId: selectedTruck?.sequenceId || "",
+                    docRefType: DOC_TYPE.WEIGHTDATA,
+                    inspectorDateTime: inspectionStartTime ? getLocalISOString(inspectionStartTime) : getLocalISOString(new Date()),
+                    inspectorBy: inspectorBy,
+                    status: QUALITY_STATUS.PENDING,
+                    remark: "",
+                    tbQualityDetails: []
+                };
+                currentDetails = [];
+            } else {
+                baseItem = { ...prev[index] };
+                currentDetails = [...(baseItem.tbQualityDetails || [])];
             }
 
-            const updated = [...prev];
-            const parent = { ...updated[index] };
+            let newDetails = [...currentDetails];
 
-            // 🔥 กัน undefined
-            const details = parent.tbQualityDetails || [];
+            for (const detail of details) {
+                const isTextType =
+                    detail.dimensionType === DIMENSION_TYPE.REMARK ||
+                    detail.dimensionType === DIMENSION_TYPE.ESTIMATE;
+                const isEmpty = isTextType
+                    ? !(detail.remark ?? "").trim()
+                    : detail.dimensionValue === null;
 
-            const detailIndex = details.findIndex(
-                d => d.qualityRuleCode === detail.qualityRuleCode
-            );
+                const detailIndex = newDetails.findIndex(d => d.qualityRuleCode === detail.qualityRuleCode);
 
-            let newDetails = [...details];
-
-            const isTextType =
-                detail.dimensionType === DIMENSION_TYPE.REMARK ||
-                detail.dimensionType === DIMENSION_TYPE.ESTIMATE;
-
-            const isEmpty = isTextType
-                ? !(detail.remark ?? "").trim()
-                : detail.dimensionValue === null;
-
-            // 🗑 delete
-            if (isEmpty) {
-                newDetails = newDetails.filter(
-                    d => d.qualityRuleCode !== detail.qualityRuleCode
-                );
-            } else {
-                // 🔄 update / ➕ add
-                if (detailIndex !== -1) {
-                    newDetails[detailIndex] = {
-                        ...newDetails[detailIndex],
-                        ...detail
-                    };
+                if (isEmpty) {
+                    if (detailIndex !== -1) newDetails.splice(detailIndex, 1);
                 } else {
-                    newDetails.push(detail);
+                    if (detailIndex !== -1) {
+                        newDetails[detailIndex] = { ...newDetails[detailIndex], ...detail };
+                    } else {
+                        newDetails.push(detail);
+                    }
                 }
             }
 
-            parent.tbQualityDetails = newDetails;
-            updated[index] = parent;
+            const updatedItem = { ...baseItem, tbQualityDetails: newDetails };
 
-            return updated; // ✅ state เปลี่ยนแน่นอน
+            if (index === -1) {
+                return [...prev, updatedItem];
+            } else {
+                const updated = [...prev];
+                updated[index] = updatedItem;
+                return updated;
+            }
         });
     };
 
