@@ -433,10 +433,6 @@ const QcPineapplePage = () => {
                                     );
                                     const isOver = groupSum > targetLimit + 0.001;
                                     const currentVal = values[`${r.id}_${item.id}`] || "";
-                                    const isNitrateOverLimit =
-                                      groupName.group === "NITRATE" &&
-                                      currentVal &&
-                                      parseFloat(currentVal) > globalSampleCount;
 
                                     return (
                                       <TableCell key={r.id} align="center">
@@ -454,7 +450,7 @@ const QcPineapplePage = () => {
                                               e.target.value,
                                             );
                                           }}
-                                          error={!!(groupName.group === "NITRATE" ? isNitrateOverLimit : isOver)}
+                                          error={false}
                                           inputProps={{
                                             style: {
                                               textAlign: "center",
@@ -477,7 +473,7 @@ const QcPineapplePage = () => {
                                     align="center"
                                     sx={{
                                       fontWeight: 900,
-                                      bgcolor: "#F9FCFF",
+                                      bgcolor: "#a5abb1",
                                       color: THEME_NAVY,
                                     }}
                                   >
