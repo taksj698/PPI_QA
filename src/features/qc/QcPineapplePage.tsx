@@ -54,6 +54,7 @@ const QcPineapplePage = () => {
     globalSampleCount,
     handleSampleCountChange,
     nitrateSampleCounts,
+    nitrateOptions,
     handleNitrateSampleCountChange,
     setRounds,
     rounds,
@@ -97,12 +98,12 @@ const QcPineapplePage = () => {
   };
 
   const NITRATE_PAIRS = [
-    { key: "20-21", label: "เฉลี่ย 1-2", itemIds: ["20", "21"] },
-    { key: "22-23", label: "เฉลี่ย 3-4", itemIds: ["22", "23"] },
-    { key: "24-25", label: "เฉลี่ย 5-6", itemIds: ["24", "25"] },
+    { key: "23-24", label: "เฉลี่ย 1-2", itemIds: ["23", "24"] },
+    { key: "25-26", label: "เฉลี่ย 3-4", itemIds: ["25", "26"] },
+    { key: "27-28", label: "เฉลี่ย 5-6", itemIds: ["27", "28"] },
   ];
 
-  const getNitratePairAverage = (itemIds: string[]) => {
+  const getNitratePairAverage = (itemIds: string[], sampleCount: number) => {
     const valuesList = rounds
       .flatMap((r) =>
         itemIds
@@ -112,8 +113,8 @@ const QcPineapplePage = () => {
       )
       .filter((num) => !Number.isNaN(num));
 
-    if (!valuesList.length) return "";
-    return (valuesList.reduce((sum, num) => sum + num, 0) / valuesList.length).toFixed(2);
+    if (!valuesList.length || sampleCount <= 0) return "";
+    return (valuesList.reduce((sum, num) => sum + num, 0) / sampleCount).toFixed(2);
   };
 
 
@@ -381,9 +382,9 @@ const QcPineapplePage = () => {
 
                       {groupName.group === "NITRATE"
                         ? [
-                            { key: "20-21", label: "เฉลี่ย 1-2", itemIds: ["20", "21"] },
-                            { key: "22-23", label: "เฉลี่ย 3-4", itemIds: ["22", "23"] },
-                            { key: "24-25", label: "เฉลี่ย 5-6", itemIds: ["24", "25"] },
+                            { key: "23-24", label: "เฉลี่ย 1-2", itemIds: ["23", "24"] },
+                            { key: "25-26", label: "เฉลี่ย 3-4", itemIds: ["25", "26"] },
+                            { key: "27-28", label: "เฉลี่ย 5-6", itemIds: ["27", "28"] },
                           ].flatMap((pair) => {
                             const pairItems = ASSESSMENT_CRITERIA.filter((c) =>
                               pair.itemIds.includes(c.id),
@@ -559,7 +560,7 @@ const QcPineapplePage = () => {
                                       </Typography>
                                       <Select
                                         size="small"
-                                        value={nitrateSampleCounts[pair.key] || globalSampleCount}
+                                        value={nitrateSampleCounts[pair.key] || nitrateOptions[0]}
                                         onChange={(e) =>
                                           handleNitrateSampleCountChange(
                                             pair.key,
@@ -568,7 +569,7 @@ const QcPineapplePage = () => {
                                         }
                                         sx={{ minWidth: 100 }}
                                       >
-                                        {[5, 10, 15, 20].map((val) => (
+                                        {nitrateOptions.map((val) => (
                                           <MenuItem key={val} value={val}>
                                             {val}
                                           </MenuItem>
@@ -586,7 +587,7 @@ const QcPineapplePage = () => {
                                       <TextField
                                         size="small"
                                         type="number"
-                                        value={getNitratePairAverage(pair.itemIds)}
+                                        value={getNitratePairAverage(pair.itemIds, nitrateSampleCounts[pair.key] || nitrateOptions[0])}
                                         InputProps={{ readOnly: true }}
                                         sx={{ minWidth: 100 }}
                                       />

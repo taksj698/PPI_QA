@@ -50,6 +50,23 @@ export const useQcPineapple = () => {
     const [rowRemarks, setRowRemarks] = useState<RemarksState>({});
     const [estimatedWeights, setEstimatedWeights] = useState<EstimatedWeightState>({});
     const [nitrateSampleCounts, setNitrateSampleCounts] = useState<Record<string, number>>({});
+    const [nitrateOptions, setNitrateOptions] = useState<number[]>([3, 6, 9, 12, 15, 18]);
+
+    useEffect(() => {
+        qcService.getNitrateConfig().then((res) => {
+            const config = res.data.find((c) => c.name === "NITRATE_QUALITY_RANDOM");
+            if (config) {
+                try {
+                    const parsed = JSON.parse(config.value) as number[];
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        setNitrateOptions(parsed);
+                    }
+                } catch {
+                    // ใช้ค่า default ถ้า parse ไม่ได้
+                }
+            }
+        }).catch(() => {/* ใช้ค่า default */});
+    }, []);
 
     // UI States
     const [openSearch, setOpenSearch] = useState<boolean>(false);
@@ -592,6 +609,7 @@ export const useQcPineapple = () => {
         handleSampleCountChange,
         handleNitrateSampleCountChange,
         nitrateSampleCounts,
+        nitrateOptions,
         saveDraft,
         confirmAction,
         confirmConfig,
