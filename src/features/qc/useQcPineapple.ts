@@ -340,7 +340,7 @@ export const useQcPineapple = () => {
         const detail = createDetail(
             code,
             DIMENSION_TYPE.DETAIL,
-            DIMENSION_UNIT.EACH,
+            groupName === "NITRATE" ? DIMENSION_UNIT.PPM : DIMENSION_UNIT.EACH,
             val
         );
 
