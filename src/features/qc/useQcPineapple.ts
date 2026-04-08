@@ -10,8 +10,29 @@ import { QcInsertResponse, Quality, QualityDetail } from "@/types/qcInsert.type"
 import { QcTicketResponse } from "@/types/QcResponse.type";
 
 
+const getLocalISOString = (date: Date) => {
+    const offset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - offset).toISOString();
+};
 
 export const useQcPineapple = () => {
+    const [inspectorBy, setInspectorBy] = useState<string>("");
+    const [inspectionStartTime, setInspectionStartTime] = useState<Date | null>(null);
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const user = localStorage.getItem("user");
+            if (user) {
+                try {
+                    const userData = JSON.parse(user);
+                    setInspectorBy(userData.fullUserName || "");
+                } catch (e) {
+                    console.error("Error parsing user data", e);
+                }
+            }
+        }
+    }, []);
+
     const [selectedTruck, setSelectedTruck] = useState<QcCheck | null>(null);
     const [globalSampleCount, setGlobalSampleCount] = useState<number>(10);
     const [rounds, setRounds] = useState<Round[]>(() => [
@@ -139,6 +160,7 @@ export const useQcPineapple = () => {
             // ถ้าไม่มีข้อมูล → reset state
             setValues({});
             setQualityRequestList([]);
+            setInspectionStartTime(new Date());
             return;
         }
 
@@ -149,7 +171,7 @@ export const useQcPineapple = () => {
             planCode: q.planCode ?? "",
             docId: q.docId ?? "",
             docRefType: q.docRefType ?? "",
-            inspectorDateTime: q.inspectorDateTime ?? new Date().toISOString(),
+            inspectorDateTime: q.inspectorDateTime ?? getLocalISOString(new Date()),
             inspectorBy: q.inspectorBy ?? "",
             status: q.status ?? QUALITY_STATUS.PENDING,
             remark: q.remark ?? "",
@@ -187,6 +209,7 @@ export const useQcPineapple = () => {
         setRowRemarks(mapQcToRemarks(allDetails));
         setEstimatedWeights(mapEstimatedWeights(allDetails));
         setValues(mappedValues);
+        setInspectionStartTime(new Date());
     };
 
 
@@ -466,7 +489,7 @@ export const useQcPineapple = () => {
             const index = prev.findIndex(
                 item => item.qualityType === groupName
             );
-            const dateformat = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+            const dateformat = getLocalISOString(new Date()).slice(0, 10).replace(/-/g, "");
             // 🔥 กรณี "ยังไม่มี group นี้" → สร้างใหม่
             if (index === -1) {
                 return [
@@ -478,8 +501,8 @@ export const useQcPineapple = () => {
                         planCode: `${groupName}_${dateformat}`,
                         docId: selectedTruck?.sequenceId || "",
                         docRefType: DOC_TYPE.WEIGHTDATA, //
-                        inspectorDateTime: new Date().toISOString(),
-                        inspectorBy: "",
+                        inspectorDateTime: inspectionStartTime ? getLocalISOString(inspectionStartTime) : getLocalISOString(new Date()),
+                        inspectorBy: inspectorBy,
                         status: QUALITY_STATUS.PENDING,
                         remark: "",
                         tbQualityDetails: [detail] // 👈 สำคัญ

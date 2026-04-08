@@ -47,7 +47,7 @@ export default function BottomSummaryBar({
           alignItems="center"
         >
           <Stack direction="row" spacing={4}>
-            <Box>
+            {/* <Box>
               <Typography
                 variant="caption"
                 color="text.secondary"
@@ -58,9 +58,9 @@ export default function BottomSummaryBar({
               <Typography variant="h5" fontWeight={900}>
                 {roundsCount}
               </Typography>
-            </Box>
+            </Box> */}
 
-            <Box>
+            {/* <Box>
               <Typography
                 variant="caption"
                 color="text.secondary"
@@ -71,7 +71,7 @@ export default function BottomSummaryBar({
               <Typography variant="h5" fontWeight={900} color={accentColor}>
                 {totalSamples}
               </Typography>
-            </Box>
+            </Box> */}
           </Stack>
 
           <Stack
