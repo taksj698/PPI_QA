@@ -165,8 +165,51 @@ export const useQcPineapple = () => {
 
 
 
+    const NITRATE_PAIR_CONFIG = [
+        { key: "23-24", pairSuffix: "12", itemIds: ["23", "24"] },
+        { key: "25-26", pairSuffix: "34", itemIds: ["25", "26"] },
+        { key: "27-28", pairSuffix: "56", itemIds: ["27", "28"] },
+    ];
+
+    const calcNitrateAvg = (pairItemIds: string[], sampleCount: number, overrideValues?: ValuesState): number | null => {
+        const src = overrideValues ?? values;
+        const vals = rounds
+            .flatMap(r => pairItemIds.map(id => src[`${r.id}_${id}`]))
+            .filter(v => v !== undefined && v !== "")
+            .map(v => parseFloat(v as string))
+            .filter(n => !Number.isNaN(n));
+        if (!vals.length || sampleCount <= 0) return null;
+        return parseFloat((vals.reduce((sum, n) => sum + n, 0) / sampleCount).toFixed(2));
+    };
+
     const handleNitrateSampleCountChange = (key: string, value: number) => {
         setNitrateSampleCounts(prev => ({ ...prev, [key]: value }));
+
+        const pairConfig = NITRATE_PAIR_CONFIG.find(p => p.key === key);
+        if (!pairConfig) return;
+
+        const randomDetail: TbQualityDetail = {
+            id: 0, qualityId: 0,
+            qualityRuleCode: `NITRATE_${DIMENSION_TYPE.RANDOM}${pairConfig.pairSuffix}`,
+            dimensionType: DIMENSION_TYPE.RANDOM,
+            dimensionCode: `${DIMENSION_TYPE.RANDOM}${pairConfig.pairSuffix}`,
+            dimensionValue: value > 0 ? value : null,
+            dimensionUnit: DIMENSION_UNIT.EACH,
+            remark: null
+        };
+
+        const avgValue = calcNitrateAvg(pairConfig.itemIds, value);
+        const avgDetail: TbQualityDetail = {
+            id: 0, qualityId: 0,
+            qualityRuleCode: `NITRATE_${DIMENSION_TYPE.AVG}${pairConfig.pairSuffix}`,
+            dimensionType: DIMENSION_TYPE.AVG,
+            dimensionCode: `${DIMENSION_TYPE.AVG}${pairConfig.pairSuffix}`,
+            dimensionValue: avgValue,
+            dimensionUnit: DIMENSION_UNIT.PPM,
+            remark: null
+        };
+
+        updateDetails("NITRATE", [randomDetail, avgDetail]);
     };
 
     const chooseTruck = async (truck: QcCheck) => {
@@ -340,7 +383,25 @@ export const useQcPineapple = () => {
             val
         ));
 
-        // TOTAL + AVG records (ยกเว้น NITRATE ที่แสดง "-")
+        // NITRATE: บันทึก AVG ของ pair ที่เกี่ยวข้อง
+        if (groupName === "NITRATE") {
+            const pairConfig = NITRATE_PAIR_CONFIG.find(p => p.itemIds.includes(criteriaId));
+            if (pairConfig) {
+                const sampleCount = nitrateSampleCounts[pairConfig.key] || nitrateOptions[0];
+                const avgValue = calcNitrateAvg(pairConfig.itemIds, sampleCount, newValues);
+                detailsToUpdate.push({
+                    id: 0, qualityId: 0,
+                    qualityRuleCode: `NITRATE_${DIMENSION_TYPE.AVG}${pairConfig.pairSuffix}`,
+                    dimensionType: DIMENSION_TYPE.AVG,
+                    dimensionCode: `${DIMENSION_TYPE.AVG}${pairConfig.pairSuffix}`,
+                    dimensionValue: avgValue,
+                    dimensionUnit: DIMENSION_UNIT.PPM,
+                    remark: null
+                });
+            }
+        }
+
+        // TOTAL + AVG records สำหรับ group อื่น ๆ
         if (groupName !== "NITRATE") {
             const groupCriteria = ASSESSMENT_CRITERIA.filter(c => c.group === groupName);
 
