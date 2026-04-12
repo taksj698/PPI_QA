@@ -207,10 +207,10 @@ export const ASSESSMENT_CRITERIA: AssessmentCriteria[] = [
 ];
 
 export const GROUP_QA: GroupQA[] = [
+  { group: "NITRATE", name: "ไนเตรท" },
   { group: "SIZE", name: "ขนาด" },
-  { group: "RIPEN", name: "ความสุก" },
+  { group: "RIPEN", name: "สุกครึ่งลูกขึ้นไป" },
   { group: "FLAW", name: "ตำหนิ" },
-  { group: "NITRATE", name: "ไนเตรด" },
   { group: "SUMMARY", name: "สรุปจำนวนลูก (รวม)" },
 ];
 
