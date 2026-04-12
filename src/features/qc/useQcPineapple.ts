@@ -16,22 +16,18 @@ const getLocalISOString = (date: Date) => {
 };
 
 export const useQcPineapple = () => {
-    const [inspectorBy, setInspectorBy] = useState<string>("");
-    const [inspectionStartTime, setInspectionStartTime] = useState<Date | null>(null);
-
-    useEffect(() => {
-        if (typeof window !== "undefined") {
+    const [inspectorBy] = useState<string>(() => {
+        try {
             const user = localStorage.getItem("user");
             if (user) {
-                try {
-                    const userData = JSON.parse(user);
-                    setInspectorBy(userData.fullUserName || "");
-                } catch (e) {
-                    console.error("Error parsing user data", e);
-                }
+                const userData = JSON.parse(user);
+                return userData.fullUserName || "";
             }
+        } catch (e) {
+            console.error("Error parsing user data", e);
         }
-    }, []);
+        return "";
+    });
 
     const [selectedTruck, setSelectedTruck] = useState<QcCheck | null>(null);
     const [globalSampleCount, setGlobalSampleCount] = useState<number>(10);
@@ -152,7 +148,7 @@ export const useQcPineapple = () => {
 
     const hasValidationError = useMemo(() => {
         return rounds.some((r) =>
-            GROUP_QA.some((g) => getRoundTotalForGroup(r.id, g.group) > targetLimit + 0.001),
+            GROUP_QA.filter((g) => g.group !== "NITRATE").some((g) => getRoundTotalForGroup(r.id, g.group) > targetLimit + 0.001),
         );
     }, [rounds, values, targetLimit, getRoundTotalForGroup]);
 
@@ -220,7 +216,6 @@ export const useQcPineapple = () => {
             // ถ้าไม่มีข้อมูล → reset state
             setValues({});
             setQualityRequestList([]);
-            setInspectionStartTime(new Date());
             return;
         }
 
@@ -269,7 +264,6 @@ export const useQcPineapple = () => {
         setRowRemarks(mapQcToRemarks(allDetails));
         setEstimatedWeights(mapEstimatedWeights(allDetails));
         setValues(mappedValues);
-        setInspectionStartTime(new Date());
     };
 
 
@@ -548,8 +542,8 @@ export const useQcPineapple = () => {
             let hasError = false;
             for (const item of qualityRequestList) {
 
-                item.status = QUALITY_STATUS.COMPLETE;
-                const data: QcInsertResponse = await qcService.insertQualityData(item);
+                const payload = { ...item, status: QUALITY_STATUS.COMPLETE };
+                const data: QcInsertResponse = await qcService.insertQualityData(payload);
 
                 if (!data.isSuccess) {
                     hasError = true;
@@ -631,7 +625,7 @@ export const useQcPineapple = () => {
                     planCode: `${groupName}_${dateformat}`,
                     docId: selectedTruck?.sequenceId || "",
                     docRefType: DOC_TYPE.WEIGHTDATA,
-                    inspectorDateTime: inspectionStartTime ? getLocalISOString(inspectionStartTime) : getLocalISOString(new Date()),
+                    inspectorDateTime: getLocalISOString(new Date()),
                     inspectorBy: inspectorBy,
                     status: QUALITY_STATUS.PENDING,
                     remark: "",
@@ -639,7 +633,7 @@ export const useQcPineapple = () => {
                 };
                 currentDetails = [];
             } else {
-                baseItem = { ...prev[index] };
+                baseItem = { ...prev[index], inspectorDateTime: getLocalISOString(new Date()) };
                 currentDetails = [...(baseItem.tbQualityDetails || [])];
             }
 
