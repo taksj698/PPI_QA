@@ -98,9 +98,9 @@ const QcPineapplePage = () => {
   };
 
   const NITRATE_PAIRS = [
-    { key: "23-24", label: "เฉลี่ย 1-2", itemIds: ["23", "24"] },
-    { key: "25-26", label: "เฉลี่ย 3-4", itemIds: ["25", "26"] },
-    { key: "27-28", label: "เฉลี่ย 5-6", itemIds: ["27", "28"] },
+    { key: "21-22", label: "เฉลี่ย 1-2", itemIds: ["21", "22"] },
+    { key: "23-24", label: "เฉลี่ย 3-4", itemIds: ["23", "24"] },
+    { key: "25-26", label: "เฉลี่ย 5-6", itemIds: ["25", "26"] },
   ];
 
   const getNitratePairAverage = (itemIds: string[], sampleCount: number) => {
@@ -382,9 +382,9 @@ const QcPineapplePage = () => {
 
                       {groupName.group === "NITRATE"
                         ? [
-                            { key: "23-24", label: "เฉลี่ย 1-2", itemIds: ["23", "24"] },
-                            { key: "25-26", label: "เฉลี่ย 3-4", itemIds: ["25", "26"] },
-                            { key: "27-28", label: "เฉลี่ย 5-6", itemIds: ["27", "28"] },
+                            { key: "21-22", label: "เฉลี่ย 1-2", itemIds: ["21", "22"] },
+                            { key: "23-24", label: "เฉลี่ย 3-4", itemIds: ["23", "24"] },
+                            { key: "25-26", label: "เฉลี่ย 5-6", itemIds: ["25", "26"] },
                           ].flatMap((pair) => {
                             const pairItems = ASSESSMENT_CRITERIA.filter((c) =>
                               pair.itemIds.includes(c.id),

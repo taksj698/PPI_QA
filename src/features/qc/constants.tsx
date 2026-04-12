@@ -56,7 +56,7 @@ export const ASSESSMENT_CRITERIA: AssessmentCriteria[] = [
   },
   {
     id: "5", //ripe_yellow1
-    label: "ปรากฎเหลือง (1-3 ตา)",
+    label: "ปาดเหลือง (1-3 ตา)",
     group: "RIPEN",
     icon: <GrassIcon fontSize="small" sx={{ color: "#FFEB3B" }} />,
   },
@@ -68,150 +68,138 @@ export const ASSESSMENT_CRITERIA: AssessmentCriteria[] = [
   },
   {
     id: "7", //ripe_bruise_more
-    label: "ช้ำ > 30%",
+    label: "ช้ำ > 30% โอ่ เน่า",
     group: "RIPEN",
     icon: <WaterDropIcon fontSize="small" sx={{ color: "#7B1FA2" }} />,
   },
   {
-    id: "8", //ripe_overripe
-    label: "โอ่",
-    group: "RIPEN",
-    icon: <WarningIcon fontSize="small" sx={{ color: "#F44336" }} />,
-  },
-  {
-    id: "9", //ripe_rotten
-    label: "เน่า",
-    group: "RIPEN",
-    icon: <BlockIcon fontSize="small" color="error" />,
-  },
-  {
-    id: "10", //def_stunted_less
+    id: "8", //def_stunted_less
     label: "แกร็น < 30%",
     group: "FLAW",
     icon: <WarningIcon fontSize="small" sx={{ color: "#FF9800" }} />,
   },
   {
-    id: "11", //def_stunted_more
+    id: "9", //def_stunted_more
     label: "แกร็น > 30%",
     group: "FLAW",
     icon: <WarningIcon fontSize="small" sx={{ color: "#F44336" }} />,
   },
   {
-    id: "12", //def_bruised_less
+    id: "10", //def_bruised_less
     label: "ช้ำ < 30%",
     group: "FLAW",
     icon: <WaterDropIcon fontSize="small" sx={{ color: "#9C27B0" }} />,
   },
   {
-    id: "13", //def_bruised_mid
+    id: "11", //def_bruised_mid
     label: "ช้ำ > 30-50%",
     group: "FLAW",
     icon: <WaterDropIcon fontSize="small" sx={{ color: "#7B1FA2" }} />,
   },
   {
-    id: "14", //def_bruised_more
+    id: "12", //def_bruised_more
     label: "ช้ำ > 50%",
     group: "FLAW",
     icon: <WaterDropIcon fontSize="small" sx={{ color: "#4A148C" }} />,
   },
   {
-    id: "15", //def_sunburn
+    id: "13", //def_sunburn
     label: "แดดเผา",
     group: "FLAW",
     icon: <SunIcon fontSize="small" sx={{ color: "#FF5722" }} />,
   },
   {
-    id: "16", //def_hollow
+    id: "14", //def_hollow
     label: "เนื้อโพรง",
     group: "FLAW",
     icon: <HollowIcon fontSize="small" sx={{ color: "#795548" }} />,
   },
   {
-    id: "17", //def_rotten
+    id: "15", //def_rotten
     label: "เน่า",
     group: "FLAW",
     icon: <BlockIcon fontSize="small" color="error" />,
   },
   {
-    id: "18", //def_fungus
+    id: "16", //def_fungus
     label: "เชื้อรา",
     group: "FLAW",
     icon: <FungusIcon fontSize="small" sx={{ color: "#607D8B" }} />,
   },
   {
-    id: "19", //def_seed
+    id: "17", //def_seed
     label: "เมล็ด",
     group: "FLAW",
     icon: <SeedIcon fontSize="small" sx={{ color: "#212121" }} />,
   },
   {
-    id: "20", //def_deformed
+    id: "18", //def_deformed
     label: "รูปร่างผิดปกติ",
     group: "FLAW",
     icon: <DeformedIcon fontSize="small" sx={{ color: "#9E9E9E" }} />,
   },
   {
-    id: "21", //def_pest
+    id: "19", //def_pest
     label: "สิ่งปนเปื้อน/สัตว์กัดแทะ",
     group: "FLAW",
     icon: <BugIcon fontSize="small" sx={{ color: "#3E2723" }} />,
   },
   {
-    id: "22", //def_fraud
+    id: "20", //def_fraud
     label: "พันธุ์อื่น (Food Fraud)",
     group: "FLAW",
     icon: <BlockIcon fontSize="small" color="error" />,
   },
   {
-    id: "23",
+    id: "21",
     label: "ค่าไนเตรทครั้งที่ 1",
     group: "NITRATE",
     icon: <ScienceIcon fontSize="small" color="success" />,
   },
   {
-    id: "24",
+    id: "22",
     label: "ค่าไนเตรทครั้งที่ 2",
     group: "NITRATE",
     icon: <ScienceIcon fontSize="small" color="success" />,
   },
   {
-    id: "25",
+    id: "23",
     label: "ค่าไนเตรทครั้งที่ 3",
     group: "NITRATE",
     icon: <ScienceIcon fontSize="small" color="success" />,
   },
   {
-    id: "26",
+    id: "24",
     label: "ค่าไนเตรทครั้งที่ 4",
     group: "NITRATE",
     icon: <ScienceIcon fontSize="small" color="success" />,
   },
   {
-    id: "27",
+    id: "25",
     label: "ค่าไนเตรทครั้งที่ 5",
     group: "NITRATE",
     icon: <ScienceIcon fontSize="small" color="success" />,
   },
   {
-    id: "28",
+    id: "26",
     label: "ค่าไนเตรทครั้งที่ 6",
     group: "NITRATE",
     icon: <ScienceIcon fontSize="small" color="success" />,
   },
   {
-    id: "29", //summary_good
+    id: "27", //summary_good
     label: "จำนวนลูกที่เป็นของดี",
     group: "SUMMARY",
     icon: <SuccessIcon fontSize="small" color="success" />,
   },
   {
-    id: "30", //summary_minor
+    id: "28", //summary_minor
     label: "จำนวนลูกที่มีแกร็น <30% ช้ำ <30%",
     group: "SUMMARY",
     icon: <WarningIcon fontSize="small" sx={{ color: "#FFC107" }} />,
   },
   {
-    id: "31", //summary_waste
+    id: "29", //summary_waste
     label: "จำนวนลูกที่เป็นของเสีย (*)",
     group: "SUMMARY",
     icon: <WasteIcon fontSize="small" color="error" />,

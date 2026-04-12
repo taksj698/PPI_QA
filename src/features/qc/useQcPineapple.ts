@@ -18,6 +18,7 @@ const getLocalISOString = (date: Date) => {
 export const useQcPineapple = () => {
     const [inspectorBy] = useState<string>(() => {
         try {
+            if (typeof window === "undefined") return "";
             const user = localStorage.getItem("user");
             if (user) {
                 const userData = JSON.parse(user);
@@ -162,9 +163,9 @@ export const useQcPineapple = () => {
 
 
     const NITRATE_PAIR_CONFIG = [
-        { key: "23-24", pairSuffix: "12", itemIds: ["23", "24"] },
-        { key: "25-26", pairSuffix: "34", itemIds: ["25", "26"] },
-        { key: "27-28", pairSuffix: "56", itemIds: ["27", "28"] },
+        { key: "21-22", pairSuffix: "12", itemIds: ["21", "22"] },
+        { key: "23-24", pairSuffix: "34", itemIds: ["23", "24"] },
+        { key: "25-26", pairSuffix: "56", itemIds: ["25", "26"] },
     ];
 
     const calcNitrateAvg = (pairItemIds: string[], sampleCount: number, overrideValues?: ValuesState): number | null => {
@@ -583,7 +584,7 @@ export const useQcPineapple = () => {
         qualityRuleCode: string,
         dimensionType: string,
         dimensionUnit: string | null,
-        value: any,
+        value: string | number | null,
         remark?: string
     ): TbQualityDetail => {
         const isTextType =
@@ -602,7 +603,7 @@ export const useQcPineapple = () => {
                     ? null
                     : Number(value),
             dimensionUnit,
-            remark: isTextType ? (remark ?? value ?? "") : null
+            remark: isTextType ? (remark ?? String(value ?? "")) : null
         };
     };
     const updateDetail = (groupName: string, detail: TbQualityDetail) => {
@@ -637,7 +638,7 @@ export const useQcPineapple = () => {
                 currentDetails = [...(baseItem.tbQualityDetails || [])];
             }
 
-            let newDetails = [...currentDetails];
+            const newDetails = [...currentDetails];
 
             for (const detail of details) {
                 const isTextType =
