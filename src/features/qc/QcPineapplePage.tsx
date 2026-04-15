@@ -19,7 +19,13 @@ import {
   Button,
   Fade,
   TextField,
-  Divider
+  Divider,
+  Checkbox,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+  FormLabel,
+  InputAdornment,
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -89,6 +95,29 @@ const QcPineapplePage = () => {
     getSectionRounds,
     getSectionCriteria,
   } = useQcPineapple();
+
+  const [detail, setDetail] = useState({
+    docNo: "",
+    poNo: "",
+    supplierId: "",
+    nameAddress: "",
+    isStation: false,
+    receiveDate: "",
+    receiveTime: "",
+    receiver: "",
+    productType: "",
+    sourceArea: "",
+    region: "",
+    reject: false,
+    remark: "",
+    truckType: "",
+    dumperNo: "",
+    no3Tag: "",
+  });
+
+  const handleDetailChange = (field: string, value: string | boolean) => {
+    setDetail(prev => ({ ...prev, [field]: value }));
+  };
 
   const getGroupTotal = (group: string): number => {
     return ASSESSMENT_CRITERIA.filter((c) => c.group === group).reduce(
@@ -260,6 +289,189 @@ const QcPineapplePage = () => {
                   </Box>
                 </Stack>
               </Stack>
+            </Paper>
+
+            {/* Detail Card */}
+            <Paper elevation={0} sx={{ p: 2, borderRadius: 4, border: '1px solid #E0E0E0', mb: 2, bgcolor: 'white' }}>
+              <Typography variant="caption" fontWeight={800} color="text.secondary" sx={{ display: 'block', mb: 1.5, textTransform: 'uppercase', letterSpacing: 1 }}>
+                Detail
+              </Typography>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 2 }}>
+
+                {/* Left Column */}
+                <Stack spacing={1.5}>
+                  <TextField
+                    label="เลขที่เอกสาร"
+                    size="small"
+                    fullWidth
+                    value={detail.docNo}
+                    onChange={e => handleDetailChange('docNo', e.target.value)}
+                  />
+                  <TextField
+                    label="เลขที่ PO"
+                    size="small"
+                    fullWidth
+                    value={detail.poNo}
+                    onChange={e => handleDetailChange('poNo', e.target.value)}
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton size="small"><SearchIcon fontSize="small" /></IconButton>
+                          </InputAdornment>
+                        )
+                      }
+                    }}
+                  />
+                  <TextField
+                    label="Supplier ID"
+                    size="small"
+                    fullWidth
+                    value={detail.supplierId}
+                    onChange={e => handleDetailChange('supplierId', e.target.value)}
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton size="small"><SearchIcon fontSize="small" /></IconButton>
+                          </InputAdornment>
+                        )
+                      }
+                    }}
+                  />
+                  <TextField
+                    label="Name / Address"
+                    size="small"
+                    fullWidth
+                    multiline
+                    rows={2}
+                    value={detail.nameAddress}
+                    onChange={e => handleDetailChange('nameAddress', e.target.value)}
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        size="small"
+                        checked={detail.isStation}
+                        onChange={e => handleDetailChange('isStation', e.target.checked)}
+                      />
+                    }
+                    label={<Typography variant="body2">กรณีสถานีรับซื้อ (Station)</Typography>}
+                  />
+                </Stack>
+
+                {/* Middle Column */}
+                <Stack spacing={1.5}>
+                  <TextField
+                    label="วันที่รับสินค้า"
+                    size="small"
+                    fullWidth
+                    type="date"
+                    value={detail.receiveDate}
+                    onChange={e => handleDetailChange('receiveDate', e.target.value)}
+                    slotProps={{ inputLabel: { shrink: true } }}
+                  />
+                  <TextField
+                    label="เวลารับ"
+                    size="small"
+                    fullWidth
+                    type="time"
+                    value={detail.receiveTime}
+                    onChange={e => handleDetailChange('receiveTime', e.target.value)}
+                    slotProps={{ inputLabel: { shrink: true } }}
+                  />
+                  <TextField
+                    label="ทะเบียนรถ"
+                    size="small"
+                    fullWidth
+                    value={selectedTruck.plate}
+                    slotProps={{ input: { readOnly: true } }}
+                  />
+                  <TextField
+                    label="ผู้บันทึก"
+                    size="small"
+                    fullWidth
+                    value={detail.receiver}
+                    onChange={e => handleDetailChange('receiver', e.target.value)}
+                  />
+                  <TextField
+                    label="ประเภท"
+                    size="small"
+                    fullWidth
+                    value={detail.productType}
+                    onChange={e => handleDetailChange('productType', e.target.value)}
+                  />
+                  <TextField
+                    label="แหล่งวัตถุดิบ"
+                    size="small"
+                    fullWidth
+                    value={detail.sourceArea}
+                    onChange={e => handleDetailChange('sourceArea', e.target.value)}
+                  />
+                  <TextField
+                    label="Region"
+                    size="small"
+                    fullWidth
+                    value={detail.region}
+                    onChange={e => handleDetailChange('region', e.target.value)}
+                  />
+                </Stack>
+
+                {/* Right Column */}
+                <Stack spacing={1.5}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        size="small"
+                        checked={detail.reject}
+                        onChange={e => handleDetailChange('reject', e.target.checked)}
+                      />
+                    }
+                    label={<Typography variant="body2">Reject</Typography>}
+                  />
+                  <TextField
+                    label="หมายเหตุ"
+                    size="small"
+                    fullWidth
+                    multiline
+                    rows={2}
+                    value={detail.remark}
+                    onChange={e => handleDetailChange('remark', e.target.value)}
+                  />
+                  <TextField
+                    label="ประเภทรถ"
+                    size="small"
+                    fullWidth
+                    value={detail.truckType}
+                    onChange={e => handleDetailChange('truckType', e.target.value)}
+                  />
+                  <TextField
+                    label="Dumper No."
+                    size="small"
+                    fullWidth
+                    value={detail.dumperNo}
+                    onChange={e => handleDetailChange('dumperNo', e.target.value)}
+                  />
+                  <Box>
+                    <FormLabel sx={{ fontSize: '0.75rem' }}>No3 Tag</FormLabel>
+                    <RadioGroup
+                      value={detail.no3Tag}
+                      onChange={e => handleDetailChange('no3Tag', e.target.value)}
+                    >
+                      {['เขียว', 'เหลือง', 'แดง', 'เหลืองจากเขียว', 'น้ำตาล'].map(tag => (
+                        <FormControlLabel
+                          key={tag}
+                          value={tag}
+                          control={<Radio size="small" />}
+                          label={<Typography variant="body2">{tag}</Typography>}
+                          sx={{ height: 28 }}
+                        />
+                      ))}
+                    </RadioGroup>
+                  </Box>
+                </Stack>
+
+              </Box>
             </Paper>
 
             <TableContainer

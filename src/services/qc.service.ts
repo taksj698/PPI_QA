@@ -1,6 +1,7 @@
 import api from "@/lib/api";
 import { ApiResponse } from "@/types/api.types";
 import { QcCheckResponse } from "@/types/qcCheck.type";
+import { QcDetailRequest, QcDetailResponse } from "@/types/qcDetail.type";
 import { QcInsertResponse } from "@/types/qcInsert.type";
 import { QcTicketResponse } from "@/types/QcResponse.type";
 import { QualityRequest } from "@/types/qualityRequest.type";
@@ -25,13 +26,17 @@ export const qcService = {
         const response = await api.get<TbConfigResponse>("/TbConfig/type/NITRATE");
         return response.data;
     },
+    async saveQcDetail(payload: QcDetailRequest): Promise<QcDetailResponse> {
+        const response = await api.post<QcDetailResponse>("/TbQuality/qc-detail", payload);
+        return response.data;
+    },
     async getQcByTicketCode(ticketCode: string): Promise<QcTicketResponse> {
         try {
             const response = await api.get<QcTicketResponse>(`/TbQuality/ticketcode/${ticketCode}`);
             return response.data;
-        } catch (error: any) {
+        } catch (error: unknown) {
             // ถ้า 404 → return default empty structure
-            if (error.response?.status === 404) {
+            if ((error as { response?: { status?: number } }).response?.status === 404) {
                 return {
                     isSuccess: true,
                     data: [], // ไม่มีข้อมูล
