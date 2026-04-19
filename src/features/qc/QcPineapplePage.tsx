@@ -667,7 +667,7 @@ const QcPineapplePage = () => {
                     select
                     label="Dumper No."
                     size="small"
-                    fullWidthรั
+                    fullWidth
                     value={detail.dumperNo}
                     onChange={(e) =>
                       handleDetailChange("dumperNo", e.target.value)
