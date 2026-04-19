@@ -679,6 +679,7 @@ export const useQcPineapple = () => {
 
     return {
         // states
+        inspectorBy,
         selectedTruck,
         globalSampleCount,
         rounds,

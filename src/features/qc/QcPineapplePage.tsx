@@ -82,6 +82,7 @@ const QcPineapplePage = () => {
     setEstimatedWeights,
     setRowRemarks,
     chooseTruck,
+    inspectorBy,
     hasValidationError,
     setConfirmOpen,
     openSearch,
@@ -568,10 +569,8 @@ const QcPineapplePage = () => {
                     label="ผู้บันทึก"
                     size="small"
                     fullWidth
-                    value={detail.receiver}
-                    onChange={(e) =>
-                      handleDetailChange("receiver", e.target.value)
-                    }
+                    value={inspectorBy}
+                    slotProps={{ input: { readOnly: true } }}
                   />
                   <TextField
                     select
@@ -661,10 +660,8 @@ const QcPineapplePage = () => {
                     label="ประเภทรถ"
                     size="small"
                     fullWidth
-                    value={detail.truckType}
-                    onChange={(e) =>
-                      handleDetailChange("truckType", e.target.value)
-                    }
+                    value={selectedTruck.truckTypeName ?? ""}
+                    slotProps={{ input: { readOnly: true } }}
                   />
                   <TextField
                     select
