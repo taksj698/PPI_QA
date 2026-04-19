@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   Container,
   Paper,
@@ -36,21 +36,28 @@ import {
   Search as SearchIcon,
   ConfirmationNumber as TicketIcon,
   Layers as LayersIcon,
-
 } from "@mui/icons-material";
 import LoadingBackdrop from "@/components/LoadingBackdrop";
 import DialogSearch from "@/components/DialogSearch";
 import ConfirmDialog from "@/components/ConfirmModal";
 import AppHeader from "@/components/AppHeader";
 import BottomSummaryBar from "@/components/BottomSummaryBar";
-import { ASSESSMENT_CRITERIA, GROUP_QA, THEME_ACCENT, THEME_BLUE_LIGHT, THEME_GRADIENT, THEME_NAVY } from "./constants";
+import {
+  ASSESSMENT_CRITERIA,
+  GROUP_QA,
+  THEME_ACCENT,
+  THEME_BLUE_LIGHT,
+  THEME_GRADIENT,
+  THEME_NAVY,
+} from "./constants";
 import { useQcPineapple } from "./useQcPineapple";
 import { authService } from "../login/auth.service";
 import { QcCheck } from "@/types/qcCheck.type";
 import { group } from "console";
 import { formatDateTime } from "@/utils/date";
 import theme from "@/theme/theme";
-
+import { qcService } from "@/services/qc.service";
+import { QcMasterItem } from "@/types/qcMaster.type";
 
 const QcPineapplePage = () => {
   const {
@@ -81,7 +88,7 @@ const QcPineapplePage = () => {
     searchQuery,
     setSearchQuery,
     isSearching,
-    setSelectedTruck, 
+    setSelectedTruck,
     confirmOpen,
     handleSubmit,
     saveDraft,
@@ -104,6 +111,7 @@ const QcPineapplePage = () => {
     isStation: false,
     receiveDate: "",
     receiveTime: "",
+    exitTime: "",
     receiver: "",
     productType: "",
     sourceArea: "",
@@ -115,8 +123,25 @@ const QcPineapplePage = () => {
     no3Tag: "",
   });
 
+  const [sourceTypes, setSourceTypes] = useState<QcMasterItem[]>([]);
+  const [sourceZones, setSourceZones] = useState<QcMasterItem[]>([]);
+  const [sourceRegions, setSourceRegions] = useState<QcMasterItem[]>([]);
+
+  useEffect(() => {
+    qcService
+      .getQcMaster()
+      .then((res) => {
+        if (res.isSuccess && res.data) {
+          setSourceTypes(res.data.sourceTypes);
+          setSourceZones(res.data.sourceZones);
+          setSourceRegions(res.data.sourceRegions);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
   const handleDetailChange = (field: string, value: string | boolean) => {
-    setDetail(prev => ({ ...prev, [field]: value }));
+    setDetail((prev) => ({ ...prev, [field]: value }));
   };
 
   const getGroupTotal = (group: string): number => {
@@ -143,13 +168,10 @@ const QcPineapplePage = () => {
       .filter((num) => !Number.isNaN(num));
 
     if (!valuesList.length || sampleCount <= 0) return "";
-    return (valuesList.reduce((sum, num) => sum + num, 0) / sampleCount).toFixed(2);
+    return (
+      valuesList.reduce((sum, num) => sum + num, 0) / sampleCount
+    ).toFixed(2);
   };
-
-
-
-
-
 
   return (
     <Box
@@ -198,7 +220,7 @@ const QcPineapplePage = () => {
                   fontWeight: 800,
                   fontSize: "1.1rem",
                   boxShadow: "0 8px 20px rgba(16, 20, 29, 0.3)",
-                  background: theme.custom.gradientHeader
+                  background: theme.custom.gradientHeader,
                 })}
               >
                 ค้นหาคิวรถ
@@ -207,53 +229,140 @@ const QcPineapplePage = () => {
           </Fade>
         ) : (
           <>
-            <Paper elevation={0} sx={{ p: 2, borderRadius: 4, border: '1px solid #E0E0E0', mb: 2, bgcolor: 'white' }}>
-              <Stack direction={{ xs: 'column', lg: 'row' }} spacing={3} divider={<Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', lg: 'block' } }} />}>
-
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                borderRadius: 4,
+                border: "1px solid #E0E0E0",
+                mb: 2,
+                bgcolor: "white",
+              }}
+            >
+              <Stack
+                direction={{ xs: "column", lg: "row" }}
+                spacing={3}
+                divider={
+                  <Divider
+                    orientation="vertical"
+                    flexItem
+                    sx={{ display: { xs: "none", lg: "block" } }}
+                  />
+                }
+              >
                 {/* Truck & Ticket Info */}
-                <Stack direction="row" spacing={2} alignItems="center" sx={{ flexGrow: 1 }}>
-                  <Avatar sx={{ width: 56, height: 56, bgcolor: THEME_BLUE_LIGHT, color: THEME_ACCENT }}>
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  alignItems="center"
+                  sx={{ flexGrow: 1 }}
+                >
+                  <Avatar
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      bgcolor: THEME_BLUE_LIGHT,
+                      color: THEME_ACCENT,
+                    }}
+                  >
                     <TruckIcon fontSize="large" />
                   </Avatar>
                   <Box>
-                    <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
-                      <Typography variant="h6" fontWeight={900} color={THEME_NAVY}>{selectedTruck.plate}</Typography>
-                      <Chip label={selectedTruck.truckTypeName} size="small" sx={{ fontWeight: 700, bgcolor: '#E8EAF6' }} />
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      alignItems="center"
+                      mb={0.5}
+                    >
+                      <Typography
+                        variant="h6"
+                        fontWeight={900}
+                        color={THEME_NAVY}
+                      >
+                        {selectedTruck.plate}
+                      </Typography>
+                      <Chip
+                        label={selectedTruck.truckTypeName}
+                        size="small"
+                        sx={{ fontWeight: 700, bgcolor: "#E8EAF6" }}
+                      />
                       <Chip
                         size="small"
-                        sx={{ height: 20, fontSize: '0.65rem' }}
-                        {...({
-                          0: { label: "NEW", color: "info" },
-                          1: { label: "DRAFT", color: "warning" },
-                        } as const)[selectedTruck.qcState ?? 0]}
+                        sx={{ height: 20, fontSize: "0.65rem" }}
+                        {...(
+                          {
+                            0: { label: "NEW", color: "info" },
+                            1: { label: "DRAFT", color: "warning" },
+                          } as const
+                        )[selectedTruck.qcState ?? 0]}
                       />
                     </Stack>
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <TicketIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                      <Typography variant="body2" color="textSecondary" fontWeight={700}>{selectedTruck.sequenceId}</Typography>
+                      <TicketIcon
+                        sx={{ fontSize: 16, color: "text.secondary" }}
+                      />
+                      <Typography
+                        variant="body2"
+                        color="textSecondary"
+                        fontWeight={700}
+                      >
+                        {selectedTruck.sequenceId}
+                      </Typography>
                     </Stack>
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <BusinessIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                      <Typography variant="body2" color="textSecondary" noWrap>{selectedTruck.companyName}</Typography>
+                      <BusinessIcon
+                        sx={{ fontSize: 16, color: "text.secondary" }}
+                      />
+                      <Typography variant="body2" color="textSecondary" noWrap>
+                        {selectedTruck.companyName}
+                      </Typography>
                     </Stack>
                   </Box>
                 </Stack>
 
                 {/* Weight Info */}
                 <Stack direction="row" spacing={3} alignItems="center">
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="caption" color="textSecondary" fontWeight={800} display="block">น้ำหนักสุทธิ</Typography>
-                    <Typography variant="h5" fontWeight={900} color="#2E7D32">{selectedTruck.grossWeight} <Typography component="span" variant="body2">กิโลกรัม</Typography></Typography>
+                  <Box sx={{ textAlign: "center" }}>
+                    <Typography
+                      variant="caption"
+                      color="textSecondary"
+                      fontWeight={800}
+                      display="block"
+                    >
+                      น้ำหนักสุทธิ
+                    </Typography>
+                    <Typography variant="h5" fontWeight={900} color="#2E7D32">
+                      {selectedTruck.grossWeight}{" "}
+                      <Typography component="span" variant="body2">
+                        กิโลกรัม
+                      </Typography>
+                    </Typography>
                   </Box>
-                  <Box sx={{ bgcolor: '#F5F5F5', p: 1, borderRadius: 2 }}>
+                  <Box sx={{ bgcolor: "#F5F5F5", p: 1, borderRadius: 2 }}>
                     <Stack direction="row" spacing={2}>
                       <Box>
-                        <Typography variant="caption" color="textSecondary" display="block">เข้า</Typography>
-                        <Typography variant="body2" fontWeight={800}>{selectedTruck.inboundWeight} kg</Typography>
+                        <Typography
+                          variant="caption"
+                          color="textSecondary"
+                          display="block"
+                        >
+                          เข้า
+                        </Typography>
+                        <Typography variant="body2" fontWeight={800}>
+                          {selectedTruck.inboundWeight} kg
+                        </Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="textSecondary" display="block">ออก</Typography>
-                        <Typography variant="body2" fontWeight={800}>{selectedTruck.outboundWeight} kg</Typography>
+                        <Typography
+                          variant="caption"
+                          color="textSecondary"
+                          display="block"
+                        >
+                          ออก
+                        </Typography>
+                        <Typography variant="body2" fontWeight={800}>
+                          {selectedTruck.outboundWeight} kg
+                        </Typography>
                       </Box>
                     </Stack>
                   </Box>
@@ -263,26 +372,39 @@ const QcPineapplePage = () => {
                 <Stack direction="row" spacing={3} alignItems="center">
                   <Box>
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <TimeIcon sx={{ fontSize: 16, color: '#FF9800' }} />
+                      <TimeIcon sx={{ fontSize: 16, color: "#FF9800" }} />
                       <Typography variant="caption" fontWeight={800}>
-                        เวลาเข้า: {selectedTruck.inboundDate
+                        เวลาเข้า:{" "}
+                        {selectedTruck.inboundDate
                           ? formatDateTime(selectedTruck.inboundDate)
                           : "-"}
                       </Typography>
                     </Stack>
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <LayersIcon sx={{ fontSize: 16, color: '#EF6C00' }} />
-                      <Typography variant="caption" fontWeight={800} color="#EF6C00">สุ่มรอบละ :</Typography>
+                      <LayersIcon sx={{ fontSize: 16, color: "#EF6C00" }} />
+                      <Typography
+                        variant="caption"
+                        fontWeight={800}
+                        color="#EF6C00"
+                      >
+                        สุ่มรอบละ :
+                      </Typography>
                       <Select
                         size="small"
                         value={globalSampleCount}
                         onChange={handleSampleCountChange}
                         variant="standard"
                         disableUnderline
-                        sx={{ fontWeight: 900, color: '#EF6C00', fontSize: '0.875rem' }}
+                        sx={{
+                          fontWeight: 900,
+                          color: "#EF6C00",
+                          fontSize: "0.875rem",
+                        }}
                       >
-                        {[5, 10, 15, 20].map(val => (
-                          <MenuItem key={val} value={val}>{val} ลูก</MenuItem>
+                        {[5, 10, 15, 20].map((val) => (
+                          <MenuItem key={val} value={val}>
+                            {val} ลูก
+                          </MenuItem>
                         ))}
                       </Select>
                     </Stack>
@@ -292,12 +414,36 @@ const QcPineapplePage = () => {
             </Paper>
 
             {/* Detail Card */}
-            <Paper elevation={0} sx={{ p: 2, borderRadius: 4, border: '1px solid #E0E0E0', mb: 2, bgcolor: 'white' }}>
-              <Typography variant="caption" fontWeight={800} color="text.secondary" sx={{ display: 'block', mb: 1.5, textTransform: 'uppercase', letterSpacing: 1 }}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                borderRadius: 4,
+                border: "1px solid #E0E0E0",
+                mb: 2,
+                bgcolor: "white",
+              }}
+            >
+              <Typography
+                variant="caption"
+                fontWeight={800}
+                color="text.secondary"
+                sx={{
+                  display: "block",
+                  mb: 1.5,
+                  textTransform: "uppercase",
+                  letterSpacing: 1,
+                }}
+              >
                 Detail
               </Typography>
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 2 }}>
-
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" },
+                  gap: 2,
+                }}
+              >
                 {/* Left Column */}
                 <Stack spacing={1.5}>
                   <TextField
@@ -305,22 +451,26 @@ const QcPineapplePage = () => {
                     size="small"
                     fullWidth
                     value={detail.docNo}
-                    onChange={e => handleDetailChange('docNo', e.target.value)}
+                    onChange={(e) =>
+                      handleDetailChange("docNo", e.target.value)
+                    }
                   />
                   <TextField
                     label="เลขที่ PO"
                     size="small"
                     fullWidth
                     value={detail.poNo}
-                    onChange={e => handleDetailChange('poNo', e.target.value)}
+                    onChange={(e) => handleDetailChange("poNo", e.target.value)}
                     slotProps={{
                       input: {
                         endAdornment: (
                           <InputAdornment position="end">
-                            <IconButton size="small"><SearchIcon fontSize="small" /></IconButton>
+                            <IconButton size="small">
+                              <SearchIcon fontSize="small" />
+                            </IconButton>
                           </InputAdornment>
-                        )
-                      }
+                        ),
+                      },
                     }}
                   />
                   <TextField
@@ -328,15 +478,19 @@ const QcPineapplePage = () => {
                     size="small"
                     fullWidth
                     value={detail.supplierId}
-                    onChange={e => handleDetailChange('supplierId', e.target.value)}
+                    onChange={(e) =>
+                      handleDetailChange("supplierId", e.target.value)
+                    }
                     slotProps={{
                       input: {
                         endAdornment: (
                           <InputAdornment position="end">
-                            <IconButton size="small"><SearchIcon fontSize="small" /></IconButton>
+                            <IconButton size="small">
+                              <SearchIcon fontSize="small" />
+                            </IconButton>
                           </InputAdornment>
-                        )
-                      }
+                        ),
+                      },
                     }}
                   />
                   <TextField
@@ -346,17 +500,25 @@ const QcPineapplePage = () => {
                     multiline
                     rows={2}
                     value={detail.nameAddress}
-                    onChange={e => handleDetailChange('nameAddress', e.target.value)}
+                    onChange={(e) =>
+                      handleDetailChange("nameAddress", e.target.value)
+                    }
                   />
                   <FormControlLabel
                     control={
                       <Checkbox
                         size="small"
                         checked={detail.isStation}
-                        onChange={e => handleDetailChange('isStation', e.target.checked)}
+                        onChange={(e) =>
+                          handleDetailChange("isStation", e.target.checked)
+                        }
                       />
                     }
-                    label={<Typography variant="body2">กรณีสถานีรับซื้อ (Station)</Typography>}
+                    label={
+                      <Typography variant="body2">
+                        กรณีสถานีรับซื้อ (Station)
+                      </Typography>
+                    }
                   />
                 </Stack>
 
@@ -368,7 +530,9 @@ const QcPineapplePage = () => {
                     fullWidth
                     type="date"
                     value={detail.receiveDate}
-                    onChange={e => handleDetailChange('receiveDate', e.target.value)}
+                    onChange={(e) =>
+                      handleDetailChange("receiveDate", e.target.value)
+                    }
                     slotProps={{ inputLabel: { shrink: true } }}
                   />
                   <TextField
@@ -377,7 +541,20 @@ const QcPineapplePage = () => {
                     fullWidth
                     type="time"
                     value={detail.receiveTime}
-                    onChange={e => handleDetailChange('receiveTime', e.target.value)}
+                    onChange={(e) =>
+                      handleDetailChange("receiveTime", e.target.value)
+                    }
+                    slotProps={{ inputLabel: { shrink: true } }}
+                  />
+                  <TextField
+                    label="เวลาออก"
+                    size="small"
+                    fullWidth
+                    type="time"
+                    value={detail.exitTime}
+                    onChange={(e) =>
+                      handleDetailChange("exitTime", e.target.value)
+                    }
                     slotProps={{ inputLabel: { shrink: true } }}
                   />
                   <TextField
@@ -392,29 +569,67 @@ const QcPineapplePage = () => {
                     size="small"
                     fullWidth
                     value={detail.receiver}
-                    onChange={e => handleDetailChange('receiver', e.target.value)}
+                    onChange={(e) =>
+                      handleDetailChange("receiver", e.target.value)
+                    }
                   />
                   <TextField
+                    select
                     label="ประเภท"
                     size="small"
                     fullWidth
                     value={detail.productType}
-                    onChange={e => handleDetailChange('productType', e.target.value)}
-                  />
+                    onChange={(e) =>
+                      handleDetailChange("productType", e.target.value)
+                    }
+                  >
+                    <MenuItem value="">
+                      <em>-- เลือกประเภท --</em>
+                    </MenuItem>
+                    {sourceTypes.map((item) => (
+                      <MenuItem key={item.code} value={item.code}>
+                        {item.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
                   <TextField
+                    select
                     label="แหล่งวัตถุดิบ"
                     size="small"
                     fullWidth
                     value={detail.sourceArea}
-                    onChange={e => handleDetailChange('sourceArea', e.target.value)}
-                  />
+                    onChange={(e) =>
+                      handleDetailChange("sourceArea", e.target.value)
+                    }
+                  >
+                    <MenuItem value="">
+                      <em>-- เลือกแหล่งวัตถุดิบ --</em>
+                    </MenuItem>
+                    {sourceZones.map((item) => (
+                      <MenuItem key={item.code} value={item.code}>
+                        {item.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
                   <TextField
+                    select
                     label="Region"
                     size="small"
                     fullWidth
                     value={detail.region}
-                    onChange={e => handleDetailChange('region', e.target.value)}
-                  />
+                    onChange={(e) =>
+                      handleDetailChange("region", e.target.value)
+                    }
+                  >
+                    <MenuItem value="">
+                      <em>-- เลือก Region --</em>
+                    </MenuItem>
+                    {sourceRegions.map((item) => (
+                      <MenuItem key={item.code} value={item.code}>
+                        {item.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
                 </Stack>
 
                 {/* Right Column */}
@@ -424,7 +639,9 @@ const QcPineapplePage = () => {
                       <Checkbox
                         size="small"
                         checked={detail.reject}
-                        onChange={e => handleDetailChange('reject', e.target.checked)}
+                        onChange={(e) =>
+                          handleDetailChange("reject", e.target.checked)
+                        }
                       />
                     }
                     label={<Typography variant="body2">Reject</Typography>}
@@ -436,41 +653,63 @@ const QcPineapplePage = () => {
                     multiline
                     rows={2}
                     value={detail.remark}
-                    onChange={e => handleDetailChange('remark', e.target.value)}
+                    onChange={(e) =>
+                      handleDetailChange("remark", e.target.value)
+                    }
                   />
                   <TextField
                     label="ประเภทรถ"
                     size="small"
                     fullWidth
                     value={detail.truckType}
-                    onChange={e => handleDetailChange('truckType', e.target.value)}
+                    onChange={(e) =>
+                      handleDetailChange("truckType", e.target.value)
+                    }
                   />
                   <TextField
+                    select
                     label="Dumper No."
                     size="small"
-                    fullWidth
+                    fullWidthรั
                     value={detail.dumperNo}
-                    onChange={e => handleDetailChange('dumperNo', e.target.value)}
-                  />
+                    onChange={(e) =>
+                      handleDetailChange("dumperNo", e.target.value)
+                    }
+                  >
+                    <MenuItem value="">
+                      <em>-- เลือก Dumper No. --</em>
+                    </MenuItem>
+                    <MenuItem value="1">1</MenuItem>
+                    <MenuItem value="2">2</MenuItem>
+                  </TextField>
                   <Box>
-                    <FormLabel sx={{ fontSize: '0.75rem' }}>No3 Tag</FormLabel>
+                    <FormLabel sx={{ fontSize: "0.75rem" }}>No3 Tag</FormLabel>
                     <RadioGroup
                       value={detail.no3Tag}
-                      onChange={e => handleDetailChange('no3Tag', e.target.value)}
+                      onChange={(e) =>
+                        handleDetailChange("no3Tag", e.target.value)
+                      }
                     >
-                      {['เขียว', 'เหลือง', 'แดง', 'เหลืองจากเขียว', 'น้ำตาล'].map(tag => (
+                      {[
+                        { value: "green", label: "เขียว" },
+                        { value: "yellow", label: "เหลือง" },
+                        { value: "red", label: "แดง" },
+                        { value: "yellow_from_green", label: "เหลืองจากเขียว" },
+                        { value: "brown", label: "น้ำตาล" },
+                      ].map((tag) => (
                         <FormControlLabel
-                          key={tag}
-                          value={tag}
+                          key={tag.value}
+                          value={tag.value}
                           control={<Radio size="small" />}
-                          label={<Typography variant="body2">{tag}</Typography>}
+                          label={
+                            <Typography variant="body2">{tag.label}</Typography>
+                          }
                           sx={{ height: 28 }}
                         />
                       ))}
                     </RadioGroup>
                   </Box>
                 </Stack>
-
               </Box>
             </Paper>
 
@@ -545,10 +784,22 @@ const QcPineapplePage = () => {
                     >
                       %
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 800, bgcolor: "#F8F9FA", minWidth: 220 }}>
+                    <TableCell
+                      sx={{
+                        fontWeight: 800,
+                        bgcolor: "#F8F9FA",
+                        minWidth: 220,
+                      }}
+                    >
                       น้ำหนักประมาณการต่อคัน
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 800, bgcolor: "#F8F9FA", minWidth: 220 }}>
+                    <TableCell
+                      sx={{
+                        fontWeight: 800,
+                        bgcolor: "#F8F9FA",
+                        minWidth: 220,
+                      }}
+                    >
                       หมายเหตุ
                     </TableCell>
                   </TableRow>
@@ -594,9 +845,21 @@ const QcPineapplePage = () => {
 
                       {groupName.group === "NITRATE"
                         ? [
-                            { key: "21-22", label: "เฉลี่ย 1-2", itemIds: ["21", "22"] },
-                            { key: "23-24", label: "เฉลี่ย 3-4", itemIds: ["23", "24"] },
-                            { key: "25-26", label: "เฉลี่ย 5-6", itemIds: ["25", "26"] },
+                            {
+                              key: "21-22",
+                              label: "เฉลี่ย 1-2",
+                              itemIds: ["21", "22"],
+                            },
+                            {
+                              key: "23-24",
+                              label: "เฉลี่ย 3-4",
+                              itemIds: ["23", "24"],
+                            },
+                            {
+                              key: "25-26",
+                              label: "เฉลี่ย 5-6",
+                              itemIds: ["25", "26"],
+                            },
                           ].flatMap((pair) => {
                             const pairItems = ASSESSMENT_CRITERIA.filter((c) =>
                               pair.itemIds.includes(c.id),
@@ -622,14 +885,19 @@ const QcPineapplePage = () => {
                                       alignItems="center"
                                     >
                                       <Box
-                                        sx={{ display: "flex", alignItems: "center" }}
+                                        sx={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                        }}
                                       >
                                         {item.icon}
                                       </Box>
                                       <Typography
                                         variant="body2"
                                         sx={{
-                                          fontWeight: groupName.name.includes("สรุป")
+                                          fontWeight: groupName.name.includes(
+                                            "สรุป",
+                                          )
                                             ? 800
                                             : 500,
                                         }}
@@ -644,8 +912,10 @@ const QcPineapplePage = () => {
                                       r.id,
                                       groupName.group,
                                     );
-                                    const isOver = groupSum > targetLimit + 0.001;
-                                    const currentVal = values[`${r.id}_${item.id}`] || "";
+                                    const isOver =
+                                      groupSum > targetLimit + 0.001;
+                                    const currentVal =
+                                      values[`${r.id}_${item.id}`] || "";
 
                                     return (
                                       <TableCell key={r.id} align="center">
@@ -710,7 +980,9 @@ const QcPineapplePage = () => {
                                       size="small"
                                       placeholder="..."
                                       fullWidth
-                                      value={estimatedWeights[`9_${item.id}`] || ""}
+                                      value={
+                                        estimatedWeights[`9_${item.id}`] || ""
+                                      }
                                       onChange={(e) =>
                                         handleEstimatedWeightsChange(
                                           groupName.group,
@@ -719,7 +991,9 @@ const QcPineapplePage = () => {
                                           e.target.value,
                                         )
                                       }
-                                      inputProps={{ style: { fontSize: '0.8rem' } }}
+                                      inputProps={{
+                                        style: { fontSize: "0.8rem" },
+                                      }}
                                       sx={{ minWidth: 220 }}
                                     />
                                   </TableCell>
@@ -738,7 +1012,9 @@ const QcPineapplePage = () => {
                                           e.target.value,
                                         )
                                       }
-                                      inputProps={{ style: { fontSize: '0.8rem' } }}
+                                      inputProps={{
+                                        style: { fontSize: "0.8rem" },
+                                      }}
                                       sx={{ minWidth: 220 }}
                                     />
                                   </TableCell>
@@ -772,7 +1048,10 @@ const QcPineapplePage = () => {
                                       </Typography>
                                       <Select
                                         size="small"
-                                        value={nitrateSampleCounts[pair.key] || nitrateOptions[0]}
+                                        value={
+                                          nitrateSampleCounts[pair.key] ||
+                                          nitrateOptions[0]
+                                        }
                                         onChange={(e) =>
                                           handleNitrateSampleCountChange(
                                             pair.key,
@@ -793,13 +1072,20 @@ const QcPineapplePage = () => {
                                       spacing={1}
                                       alignItems="center"
                                     >
-                                      <Typography variant="caption" sx={{ minWidth: 90 }}>
+                                      <Typography
+                                        variant="caption"
+                                        sx={{ minWidth: 90 }}
+                                      >
                                         ค่าเฉลี่ย:
                                       </Typography>
                                       <TextField
                                         size="small"
                                         type="number"
-                                        value={getNitratePairAverage(pair.itemIds, nitrateSampleCounts[pair.key] || nitrateOptions[0])}
+                                        value={getNitratePairAverage(
+                                          pair.itemIds,
+                                          nitrateSampleCounts[pair.key] ||
+                                            nitrateOptions[0],
+                                        )}
                                         InputProps={{ readOnly: true }}
                                         sx={{ minWidth: 100 }}
                                       />
@@ -830,14 +1116,19 @@ const QcPineapplePage = () => {
                                   alignItems="center"
                                 >
                                   <Box
-                                    sx={{ display: "flex", alignItems: "center" }}
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                    }}
                                   >
                                     {item.icon}
                                   </Box>
                                   <Typography
                                     variant="body2"
                                     sx={{
-                                      fontWeight: groupName.name.includes("สรุป")
+                                      fontWeight: groupName.name.includes(
+                                        "สรุป",
+                                      )
                                         ? 800
                                         : 500,
                                     }}
@@ -853,7 +1144,8 @@ const QcPineapplePage = () => {
                                   groupName.group,
                                 );
                                 const isOver = groupSum > targetLimit + 0.001;
-                                const currentVal = values[`${r.id}_${item.id}`] || "";
+                                const currentVal =
+                                  values[`${r.id}_${item.id}`] || "";
 
                                 return (
                                   <TableCell key={r.id} align="center">
@@ -871,7 +1163,11 @@ const QcPineapplePage = () => {
                                           e.target.value,
                                         );
                                       }}
-                                      error={!!(groupName.group === "NITRATE" ? false : isOver)}
+                                      error={
+                                        !!(groupName.group === "NITRATE"
+                                          ? false
+                                          : isOver)
+                                      }
                                       inputProps={{
                                         style: {
                                           textAlign: "center",
@@ -909,13 +1205,20 @@ const QcPineapplePage = () => {
                                   bgcolor: "#FFFDF0",
                                 }}
                               >
-                                {groupName.group === "NITRATE" ? "-" : (() => {
-                                  const rowTotal = getRowTotal(item.id);
-                                  const groupTotal = getGroupTotal(groupName.group);
-                                  return groupTotal > 0
-                                    ? ((rowTotal / groupTotal) * 100).toFixed(1)
-                                    : "0";
-                                })()}
+                                {groupName.group === "NITRATE"
+                                  ? "-"
+                                  : (() => {
+                                      const rowTotal = getRowTotal(item.id);
+                                      const groupTotal = getGroupTotal(
+                                        groupName.group,
+                                      );
+                                      return groupTotal > 0
+                                        ? (
+                                            (rowTotal / groupTotal) *
+                                            100
+                                          ).toFixed(1)
+                                        : "0";
+                                    })()}
                                 {groupName.group !== "NITRATE" && "%"}
                               </TableCell>
                               <TableCell>
@@ -930,10 +1233,10 @@ const QcPineapplePage = () => {
                                       groupName.group,
                                       9,
                                       item.id,
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
-                                  inputProps={{ style: { fontSize: '0.8rem' } }}
+                                  inputProps={{ style: { fontSize: "0.8rem" } }}
                                   sx={{ minWidth: 220 }}
                                 />
                               </TableCell>
@@ -949,10 +1252,10 @@ const QcPineapplePage = () => {
                                       groupName.group,
                                       9,
                                       item.id,
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
-                                  inputProps={{ style: { fontSize: '0.8rem' } }}
+                                  inputProps={{ style: { fontSize: "0.8rem" } }}
                                   sx={{ minWidth: 220 }}
                                 />
                               </TableCell>

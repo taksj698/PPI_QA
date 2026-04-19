@@ -6,6 +6,7 @@ import { QcInsertResponse } from "@/types/qcInsert.type";
 import { QcTicketResponse } from "@/types/QcResponse.type";
 import { QualityRequest } from "@/types/qualityRequest.type";
 import { TbConfigResponse } from "@/types/TbConfig.type";
+import { QcMasterResponse } from "@/types/qcMaster.type";
 
 
 
@@ -28,6 +29,10 @@ export const qcService = {
     },
     async saveQcDetail(payload: QcDetailRequest): Promise<QcDetailResponse> {
         const response = await api.post<QcDetailResponse>("/TbQuality/qc-detail", payload);
+        return response.data;
+    },
+    async getQcMaster(): Promise<QcMasterResponse> {
+        const response = await api.get<QcMasterResponse>("/TbQuality/qc-master");
         return response.data;
     },
     async getQcByTicketCode(ticketCode: string): Promise<QcTicketResponse> {
