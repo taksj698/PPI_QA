@@ -8,6 +8,33 @@ import { QualityRequest } from "@/types/qualityRequest.type";
 import { TbConfigResponse } from "@/types/TbConfig.type";
 import { QcMasterResponse } from "@/types/qcMaster.type";
 
+export interface EpicorPoItem {
+    poHeader_OrderDate: string;
+    poHeader_PONum: number;
+    vendor_VendorID: string;
+    vendor_Name: string;
+    vendor_Address1: string | null;
+    vendor_Address3: string | null;
+    vendor_City: string | null;
+    vendor_State: string | null;
+    vendor_ZIP: string | null;
+    purAgent_Name: string | null;
+    poHeader_PPI_IsPurchaseStation_c: boolean;
+    poHeader_PPI_CarID_c: string | null;
+    cartype_CodeDesc: string | null;
+    poHeader_PPI_CarIDStation_c: string | null;
+    udCodes_CodeDesc: string | null;
+    rowIdent: string;
+}
+
+export interface EpicorPoResponse {
+    data: { odatacontext: string; value: EpicorPoItem[] };
+    isSuccess: boolean;
+    statusCode: number;
+    message: string;
+    responseDateTime: string;
+}
+
 
 
 export const qcService = {
@@ -33,6 +60,12 @@ export const qcService = {
     },
     async getQcMaster(): Promise<QcMasterResponse> {
         const response = await api.get<QcMasterResponse>("/TbQuality/qc-master");
+        return response.data;
+    },
+    async getEpicorPo(supplierId: string): Promise<EpicorPoResponse> {
+        const response = await api.get<EpicorPoResponse>("/Epicor/po", {
+            params: { supplierId },
+        });
         return response.data;
     },
     async getQcByTicketCode(ticketCode: string): Promise<QcTicketResponse> {

@@ -145,6 +145,34 @@ const QcPineapplePage = () => {
     setDetail((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleChooseTruck = async (truck: Parameters<typeof chooseTruck>[0]) => {
+    await chooseTruck(truck);
+    setDetail((prev) => ({ ...prev, docNo: truck.sequenceId ?? "" }));
+
+    if (!truck.supplierId) return;
+    try {
+      const res = await qcService.getEpicorPo(truck.supplierId);
+      if (res.isSuccess && res.data?.value?.length) {
+        const po = res.data.value[0];
+        const addressParts = [
+          po.vendor_Address1,
+          po.vendor_Address3,
+          po.vendor_City,
+          po.vendor_State,
+          po.vendor_ZIP,
+        ].filter(Boolean);
+        setDetail((prev) => ({
+          ...prev,
+          supplierId: po.vendor_VendorID ?? "",
+          nameAddress:
+            [po.vendor_Name, ...addressParts].filter(Boolean).join(" ") ?? "",
+        }));
+      }
+    } catch (e) {
+      console.error("Failed to fetch Epicor PO:", e);
+    }
+  };
+
   const getGroupTotal = (group: string): number => {
     return ASSESSMENT_CRITERIA.filter((c) => c.group === group).reduce(
       (sum, item) => sum + getRowTotal(item.id),
@@ -1303,7 +1331,7 @@ const QcPineapplePage = () => {
         // onSearchChange={setSearchQuery}
         // isSearching={isSearching}
         // trucks={filteredTrucks}
-        onSelectTruck={chooseTruck}
+        onSelectTruck={handleChooseTruck}
       />
 
       {/* Confirm Modal */}
