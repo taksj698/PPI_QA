@@ -173,6 +173,41 @@ const QcPineapplePage = () => {
     }
   };
 
+  const buildDateTimeISO = (date: string, time: string): string => {
+    const d = date || new Date().toISOString().slice(0, 10);
+    const t = time || "00:00";
+    return new Date(`${d}T${t}:00`).toISOString();
+  };
+
+  const buildQcDetailPayload = () => {
+    const today = new Date().toISOString().slice(0, 10);
+    return {
+      docId: selectedTruck?.sequenceId ?? "",
+      poNo: detail.poNo,
+      regionCode: detail.region,
+      zoneCode: detail.sourceArea,
+      isReject: detail.reject,
+      remark: detail.remark,
+      dumperNo: detail.dumperNo,
+      no3Tag: !!detail.no3Tag,
+      userName: inspectorBy,
+      no3TagColor: detail.no3Tag,
+      qoReceiveDateTime: buildDateTimeISO(detail.receiveDate || today, detail.receiveTime),
+      qoReceiveDateTimeTime: buildDateTimeISO(detail.receiveDate || today, detail.receiveTime),
+      qoReportDateTime: new Date().toISOString(),
+      qaDepartDateTime: buildDateTimeISO(detail.receiveDate || today, detail.exitTime),
+    };
+  };
+
+  const saveWithDetail = async (mainAction: () => Promise<void>) => {
+    try {
+      await qcService.saveQcDetail(buildQcDetailPayload());
+    } catch (e) {
+      console.error("Failed to save qc-detail:", e);
+    }
+    await mainAction();
+  };
+
   const getGroupTotal = (group: string): number => {
     return ASSESSMENT_CRITERIA.filter((c) => c.group === group).reduce(
       (sum, item) => sum + getRowTotal(item.id),
@@ -1307,7 +1342,7 @@ const QcPineapplePage = () => {
             description: "",
             confirmText: "บันทึก",
           });
-          setConfirmAction(() => saveDraft);
+          setConfirmAction(() => () => saveWithDetail(saveDraft));
           setConfirmOpen(true);
         }}
         onSubmit={() => {
@@ -1316,7 +1351,7 @@ const QcPineapplePage = () => {
             description: "",
             confirmText: "ส่งผลตรวจ",
           });
-          setConfirmAction(() => handleSubmit);
+          setConfirmAction(() => () => saveWithDetail(handleSubmit));
           setConfirmOpen(true);
         }}
         accentColor={THEME_ACCENT}

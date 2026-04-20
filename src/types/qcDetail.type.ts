@@ -11,9 +11,10 @@ export interface QcDetailRequest {
     no3Tag: boolean;
     userName: string;
     no3TagColor: string;
-    qoReceiveDateTime: string;   // ISO string
-    qoReceiveDateTimeTime: string; // ISO string
-    qoReportDateTime: string;    // ISO string
+    qoReceiveDateTime: string;
+    qoReceiveDateTimeTime: string;
+    qoReportDateTime: string;
+    qaDepartDateTime: string;
 }
 
 export type QcDetailResponse = ApiResponse<null>;
