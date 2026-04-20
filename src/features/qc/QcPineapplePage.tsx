@@ -938,10 +938,10 @@ const QcPineapplePage = () => {
                                             },
                                           }}
                                           sx={{
-                                            width: 70,
+                                            width: 90,
                                             "& .MuiOutlinedInput-root": {
                                               borderRadius: 1.5,
-                                              height: 36,
+                                              height: 40,
                                             },
                                           }}
                                         />
@@ -957,7 +957,7 @@ const QcPineapplePage = () => {
                                       color: THEME_NAVY,
                                     }}
                                   >
-                                    {getRowTotal(item.id)}
+                                    {getRowTotal(item.id).toFixed(2)}
                                   </TableCell>
 
                                   <TableCell
@@ -1172,10 +1172,10 @@ const QcPineapplePage = () => {
                                         },
                                       }}
                                       sx={{
-                                        width: 70,
+                                        width: 90,
                                         "& .MuiOutlinedInput-root": {
                                           borderRadius: 1.5,
-                                          height: 36,
+                                          height: 40,
                                         },
                                       }}
                                     />
@@ -1191,7 +1191,7 @@ const QcPineapplePage = () => {
                                   color: THEME_NAVY,
                                 }}
                               >
-                                {getRowTotal(item.id)}
+                                {getRowTotal(item.id).toFixed(2)}
                               </TableCell>
 
                               <TableCell

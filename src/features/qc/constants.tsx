@@ -62,7 +62,7 @@ export const ASSESSMENT_CRITERIA: AssessmentCriteria[] = [
   },
   {
     id: "6", //ripe_half
-    label: "ครึ่งลูกขึ้นไป",
+    label: "สุกครึ่งลูกขึ้นไป",
     group: "RIPEN",
     icon: <GrassIcon fontSize="small" sx={{ color: "#FFC107" }} />,
   },
@@ -209,7 +209,7 @@ export const ASSESSMENT_CRITERIA: AssessmentCriteria[] = [
 export const GROUP_QA: GroupQA[] = [
   { group: "NITRATE", name: "ไนเตรท" },
   { group: "SIZE", name: "ขนาด" },
-  { group: "RIPEN", name: "สุกครึ่งลูกขึ้นไป" },
+  { group: "RIPEN", name: "ความสุก" },
   { group: "FLAW", name: "ตำหนิ" },
   { group: "SUMMARY", name: "สรุปจำนวนลูก (รวม)" },
 ];
