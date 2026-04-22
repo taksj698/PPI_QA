@@ -56,7 +56,7 @@ import { QcCheck } from "@/types/qcCheck.type";
 import { group } from "console";
 import { formatDateTime } from "@/utils/date";
 import theme from "@/theme/theme";
-import { qcService } from "@/services/qc.service";
+import { qcService, EpicorPoItem } from "@/services/qc.service";
 import { QcMasterItem } from "@/types/qcMaster.type";
 
 const QcPineapplePage = () => {
@@ -127,6 +127,7 @@ const QcPineapplePage = () => {
   const [sourceTypes, setSourceTypes] = useState<QcMasterItem[]>([]);
   const [sourceZones, setSourceZones] = useState<QcMasterItem[]>([]);
   const [sourceRegions, setSourceRegions] = useState<QcMasterItem[]>([]);
+  const [epicorPoList, setEpicorPoList] = useState<EpicorPoItem[]>([]);
 
   useEffect(() => {
     qcService
@@ -145,32 +146,74 @@ const QcPineapplePage = () => {
     setDetail((prev) => ({ ...prev, [field]: value }));
   };
 
+  const applyPoToDetail = (po: EpicorPoItem) => {
+    const addressParts = [
+      po.vendor_Address1,
+      po.vendor_Address3,
+      po.vendor_City,
+      po.vendor_State,
+      po.vendor_ZIP,
+    ].filter(Boolean);
+    setDetail((prev) => ({
+      ...prev,
+      poNo: String(po.poHeader_PONum),
+      supplierId: po.vendor_VendorID ?? "",
+      nameAddress: [po.vendor_Name, ...addressParts].filter(Boolean).join(" "),
+      isStation: po.poHeader_PPI_IsPurchaseStation_c ?? false,
+    }));
+  };
+
   const handleChooseTruck = async (truck: Parameters<typeof chooseTruck>[0]) => {
     await chooseTruck(truck);
     setDetail((prev) => ({ ...prev, docNo: truck.sequenceId ?? "" }));
 
-    if (!truck.supplierId) return;
+    // fetch Epicor PO list
     try {
-      const res = await qcService.getEpicorPo(truck.supplierId);
+      const res = await qcService.getEpicorPo();
       if (res.isSuccess && res.data?.value?.length) {
-        const po = res.data.value[0];
-        const addressParts = [
-          po.vendor_Address1,
-          po.vendor_Address3,
-          po.vendor_City,
-          po.vendor_State,
-          po.vendor_ZIP,
-        ].filter(Boolean);
-        setDetail((prev) => ({
-          ...prev,
-          supplierId: po.vendor_VendorID ?? "",
-          nameAddress:
-            [po.vendor_Name, ...addressParts].filter(Boolean).join(" ") ?? "",
-        }));
+        const filtered = truck.supplierId
+          ? res.data.value.filter((p) => p.vendor_VendorID === truck.supplierId)
+          : res.data.value;
+        setEpicorPoList(filtered);
+        if (filtered.length > 0) applyPoToDetail(filtered[0]);
       }
     } catch (e) {
       console.error("Failed to fetch Epicor PO:", e);
     }
+
+    // fetch saved QC detail และ prefill ถ้ามีข้อมูล
+    try {
+      const detailRes = await qcService.getQcDetail(truck.sequenceId);
+      if (detailRes.isSuccess && detailRes.data) {
+        const d = detailRes.data;
+        const toDateStr = (iso: string | null) =>
+          iso ? iso.slice(0, 10) : "";
+        const toTimeStr = (iso: string | null) =>
+          iso ? iso.slice(11, 16) : "";
+        setDetail((prev) => ({
+          ...prev,
+          poNo: d.poNo ?? prev.poNo,
+          region: d.regionCode ?? prev.region,
+          sourceArea: d.zoneCode ?? prev.sourceArea,
+          reject: d.isReject ?? prev.reject,
+          remark: d.remark ?? prev.remark,
+          dumperNo: d.dumperNo ?? prev.dumperNo,
+          no3Tag: d.no3TagColor ?? prev.no3Tag,
+          productType: d.sourceTypeCode ?? prev.productType,
+          receiveDate: toDateStr(d.qaReceiveDate) || prev.receiveDate,
+          receiveTime: toTimeStr(d.qaReceiveDateTime) || prev.receiveTime,
+          exitTime: toTimeStr(d.qaDepartDateTime) || prev.exitTime,
+        }));
+      }
+    } catch (e) {
+      // 404 = ยังไม่เคยบันทึก ไม่ต้อง error
+      console.warn("No saved QC detail:", e);
+    }
+  };
+
+  const handlePoSelect = (poNum: string) => {
+    const po = epicorPoList.find((p) => String(p.poHeader_PONum) === poNum);
+    if (po) applyPoToDetail(po);
   };
 
   const buildDateTimeISO = (date: string, time: string): string => {
@@ -181,6 +224,7 @@ const QcPineapplePage = () => {
 
   const buildQcDetailPayload = () => {
     const today = new Date().toISOString().slice(0, 10);
+    const baseDate = detail.receiveDate || today;
     return {
       docId: selectedTruck?.sequenceId ?? "",
       poNo: detail.poNo,
@@ -192,10 +236,10 @@ const QcPineapplePage = () => {
       no3Tag: !!detail.no3Tag,
       userName: inspectorBy,
       no3TagColor: detail.no3Tag,
-      qoReceiveDateTime: buildDateTimeISO(detail.receiveDate || today, detail.receiveTime),
-      qoReceiveDateTimeTime: buildDateTimeISO(detail.receiveDate || today, detail.receiveTime),
-      qoReportDateTime: new Date().toISOString(),
-      qaDepartDateTime: buildDateTimeISO(detail.receiveDate || today, detail.exitTime),
+      sourceTypeCode: detail.productType,
+      qaReceiveDate: buildDateTimeISO(baseDate, "00:00"),
+      qaReceiveDateTime: buildDateTimeISO(baseDate, detail.receiveTime),
+      qaDepartDateTime: buildDateTimeISO(baseDate, detail.exitTime),
     };
   };
 
@@ -520,23 +564,22 @@ const QcPineapplePage = () => {
                     }
                   />
                   <TextField
+                    select
                     label="เลขที่ PO"
                     size="small"
                     fullWidth
                     value={detail.poNo}
-                    onChange={(e) => handleDetailChange("poNo", e.target.value)}
-                    slotProps={{
-                      input: {
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton size="small">
-                              <SearchIcon fontSize="small" />
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      },
-                    }}
-                  />
+                    onChange={(e) => handlePoSelect(e.target.value)}
+                  >
+                    <MenuItem value="">
+                      <em>-- เลือกเลขที่ PO --</em>
+                    </MenuItem>
+                    {epicorPoList.map((po) => (
+                      <MenuItem key={po.rowIdent} value={String(po.poHeader_PONum)}>
+                        {po.poHeader_PONum}
+                      </MenuItem>
+                    ))}
+                  </TextField>
                   <TextField
                     label="Supplier ID"
                     size="small"

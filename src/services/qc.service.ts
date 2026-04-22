@@ -1,7 +1,6 @@
 import api from "@/lib/api";
-import { ApiResponse } from "@/types/api.types";
 import { QcCheckResponse } from "@/types/qcCheck.type";
-import { QcDetailRequest, QcDetailResponse } from "@/types/qcDetail.type";
+import { GetQcDetailApiResponse, QcDetailRequest, QcDetailResponse } from "@/types/qcDetail.type";
 import { QcInsertResponse } from "@/types/qcInsert.type";
 import { QcTicketResponse } from "@/types/QcResponse.type";
 import { QualityRequest } from "@/types/qualityRequest.type";
@@ -62,10 +61,12 @@ export const qcService = {
         const response = await api.get<QcMasterResponse>("/TbQuality/qc-master");
         return response.data;
     },
-    async getEpicorPo(supplierId: string): Promise<EpicorPoResponse> {
-        const response = await api.get<EpicorPoResponse>("/Epicor/po", {
-            params: { supplierId },
-        });
+    async getQcDetail(sequenceId: string): Promise<GetQcDetailApiResponse> {
+        const response = await api.post<GetQcDetailApiResponse>("/TbQuality/get-qc-detail", { sequenceId });
+        return response.data;
+    },
+    async getEpicorPo(): Promise<EpicorPoResponse> {
+        const response = await api.get<EpicorPoResponse>("/Epicor/po");
         return response.data;
     },
     async getQcByTicketCode(ticketCode: string): Promise<QcTicketResponse> {
