@@ -232,7 +232,7 @@ const QcPineapplePage = () => {
   const buildDateTimeISO = (date: string, time: string): string => {
     const d = date || new Date().toISOString().slice(0, 10);
     const t = time || "00:00";
-    return new Date(`${d}T${t}:00`).toISOString();
+    return `${d}T${t}:00`;
   };
 
   const buildQcDetailPayload = () => {
