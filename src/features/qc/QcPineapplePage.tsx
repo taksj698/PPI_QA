@@ -170,19 +170,22 @@ const QcPineapplePage = () => {
     setDetail((prev) => ({ ...prev, docNo: truck.sequenceId ?? "" }));
 
     let filtered: EpicorPoItem[] = [];
+    setEpicorPoList([]);
 
-    // fetch Epicor PO list
-    try {
-      const res = await qcService.getEpicorPo();
-      if (res.isSuccess && res.data?.value?.length) {
-        filtered = truck.supplierId
-          ? res.data.value.filter((p) => p.vendor_VendorID === truck.supplierId)
-          : res.data.value;
-        setEpicorPoList(filtered);
-        if (filtered.length > 0) applyPoToDetail(filtered[0]);
+    // fetch Epicor PO list เฉพาะเมื่อมี supplierId
+    if (truck.supplierId) {
+      try {
+        const res = await qcService.getEpicorPo();
+        if (res.isSuccess && res.data?.value?.length) {
+          filtered = res.data.value.filter(
+            (p) => p.vendor_VendorID === truck.supplierId,
+          );
+          setEpicorPoList(filtered);
+          if (filtered.length > 0) applyPoToDetail(filtered[0]);
+        }
+      } catch (e) {
+        console.error("Failed to fetch Epicor PO:", e);
       }
-    } catch (e) {
-      console.error("Failed to fetch Epicor PO:", e);
     }
 
     // fetch saved QC detail และ prefill ถ้ามีข้อมูล
