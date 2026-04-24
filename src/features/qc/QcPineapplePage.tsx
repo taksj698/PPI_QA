@@ -165,7 +165,9 @@ const QcPineapplePage = () => {
     }));
   };
 
-  const handleChooseTruck = async (truck: Parameters<typeof chooseTruck>[0]) => {
+  const handleChooseTruck = async (
+    truck: Parameters<typeof chooseTruck>[0],
+  ) => {
     await chooseTruck(truck);
     setDetail((prev) => ({ ...prev, docNo: truck.sequenceId ?? "" }));
 
@@ -193,8 +195,7 @@ const QcPineapplePage = () => {
       const detailRes = await qcService.getQcDetail(truck.sequenceId);
       if (detailRes.isSuccess && detailRes.data) {
         const d = detailRes.data;
-        const toDateStr = (iso: string | null) =>
-          iso ? iso.slice(0, 10) : "";
+        const toDateStr = (iso: string | null) => (iso ? iso.slice(0, 10) : "");
         const toTimeStr = (iso: string | null) =>
           iso ? iso.slice(11, 16) : "";
 
@@ -318,7 +319,7 @@ const QcPineapplePage = () => {
       />
 
       {/* Main Content */}
-      <Container maxWidth="xl" sx={{ mt: 2 }}>
+      <Container maxWidth={false} sx={{ mt: 2 }}>
         {!selectedTruck ? (
           <Fade in>
             <Box sx={{ textAlign: "center", py: 15 }}>
@@ -592,7 +593,10 @@ const QcPineapplePage = () => {
                       <em>-- เลือกเลขที่ PO --</em>
                     </MenuItem>
                     {epicorPoList.map((po) => (
-                      <MenuItem key={po.rowIdent} value={String(po.poHeader_PONum)}>
+                      <MenuItem
+                        key={po.rowIdent}
+                        value={String(po.poHeader_PONum)}
+                      >
                         {po.poHeader_PONum}
                       </MenuItem>
                     ))}
