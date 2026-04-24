@@ -31,6 +31,7 @@ export interface GetQcDetailResponse {
     qaReceiveDate: string | null;
     qaReceiveDateTime: string | null;
     qaDepartDateTime: string | null;
+    isStation: boolean;
 }
 
 export type QcDetailResponse = ApiResponse<null>;

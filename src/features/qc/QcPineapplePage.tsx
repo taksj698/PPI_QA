@@ -154,12 +154,14 @@ const QcPineapplePage = () => {
       po.vendor_State,
       po.vendor_ZIP,
     ].filter(Boolean);
+    const isStation = po.poHeader_PPI_IsPurchaseStation_c ?? false;
     setDetail((prev) => ({
       ...prev,
       poNo: String(po.poHeader_PONum),
       supplierId: po.vendor_VendorID ?? "",
       nameAddress: [po.vendor_Name, ...addressParts].filter(Boolean).join(" "),
-      isStation: po.poHeader_PPI_IsPurchaseStation_c ?? false,
+      isStation,
+      ...(isStation && po.vendor_VendorID ? { reject: true } : {}),
     }));
   };
 
@@ -167,11 +169,13 @@ const QcPineapplePage = () => {
     await chooseTruck(truck);
     setDetail((prev) => ({ ...prev, docNo: truck.sequenceId ?? "" }));
 
+    let filtered: EpicorPoItem[] = [];
+
     // fetch Epicor PO list
     try {
       const res = await qcService.getEpicorPo();
       if (res.isSuccess && res.data?.value?.length) {
-        const filtered = truck.supplierId
+        filtered = truck.supplierId
           ? res.data.value.filter((p) => p.vendor_VendorID === truck.supplierId)
           : res.data.value;
         setEpicorPoList(filtered);
@@ -190,9 +194,18 @@ const QcPineapplePage = () => {
           iso ? iso.slice(0, 10) : "";
         const toTimeStr = (iso: string | null) =>
           iso ? iso.slice(11, 16) : "";
+
+        // ตรวจว่า poNo ที่บันทึกไว้มีอยู่ใน Epicor list ปัจจุบันไหม
+        // ถ้าไม่มี ให้ใช้ค่าจาก Epicor (prev.poNo) แทน เพื่อให้ dropdown แสดงได้
+        const matchingPo = d.poNo
+          ? filtered.find((p) => String(p.poHeader_PONum) === d.poNo)
+          : null;
+        if (matchingPo) applyPoToDetail(matchingPo);
+
         setDetail((prev) => ({
           ...prev,
-          poNo: d.poNo ?? prev.poNo,
+          poNo: matchingPo ? d.poNo! : prev.poNo,
+          isStation: d.isStation,
           region: d.regionCode ?? prev.region,
           sourceArea: d.zoneCode ?? prev.sourceArea,
           reject: d.isReject ?? prev.reject,
@@ -401,6 +414,7 @@ const QcPineapplePage = () => {
                           {
                             0: { label: "NEW", color: "info" },
                             1: { label: "DRAFT", color: "warning" },
+                            2: { label: "SAVE", color: "success" },
                           } as const
                         )[selectedTruck.qcState ?? 0]}
                       />
