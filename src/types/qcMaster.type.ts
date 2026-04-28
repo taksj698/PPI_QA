@@ -7,6 +7,7 @@ export interface QcMasterData {
   sourceZones: QcMasterItem[];
   sourceTypes: QcMasterItem[];
   sourceRegions: QcMasterItem[];
+  sourceDumpers: QcMasterItem[];
 }
 
 export interface QcMasterResponse {

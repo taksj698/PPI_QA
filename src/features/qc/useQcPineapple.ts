@@ -180,33 +180,37 @@ export const useQcPineapple = () => {
     };
 
     const handleNitrateSampleCountChange = (key: string, value: number) => {
-        setNitrateSampleCounts(prev => ({ ...prev, [key]: value }));
+        const newCounts = { ...nitrateSampleCounts, [key]: value };
+        setNitrateSampleCounts(newCounts);
 
-        const pairConfig = NITRATE_PAIR_CONFIG.find(p => p.key === key);
-        if (!pairConfig) return;
+        const allDetails = NITRATE_PAIR_CONFIG.flatMap(pairConfig => {
+            const sampleCount = newCounts[pairConfig.key] ?? nitrateOptions[0];
 
-        const randomDetail: TbQualityDetail = {
-            id: 0, qualityId: 0,
-            qualityRuleCode: `NITRATE_${DIMENSION_TYPE.RANDOM}${pairConfig.pairSuffix}`,
-            dimensionType: DIMENSION_TYPE.RANDOM,
-            dimensionCode: `${DIMENSION_TYPE.RANDOM}${pairConfig.pairSuffix}`,
-            dimensionValue: value > 0 ? value : null,
-            dimensionUnit: DIMENSION_UNIT.EACH,
-            remark: null
-        };
+            const randomDetail: TbQualityDetail = {
+                id: 0, qualityId: 0,
+                qualityRuleCode: `NITRATE_${DIMENSION_TYPE.RANDOM}${pairConfig.pairSuffix}`,
+                dimensionType: DIMENSION_TYPE.RANDOM,
+                dimensionCode: `${DIMENSION_TYPE.RANDOM}${pairConfig.pairSuffix}`,
+                dimensionValue: sampleCount > 0 ? sampleCount : null,
+                dimensionUnit: DIMENSION_UNIT.EACH,
+                remark: null
+            };
 
-        const avgValue = calcNitrateAvg(pairConfig.itemIds, value);
-        const avgDetail: TbQualityDetail = {
-            id: 0, qualityId: 0,
-            qualityRuleCode: `NITRATE_${DIMENSION_TYPE.AVG}${pairConfig.pairSuffix}`,
-            dimensionType: DIMENSION_TYPE.AVG,
-            dimensionCode: `${DIMENSION_TYPE.AVG}${pairConfig.pairSuffix}`,
-            dimensionValue: avgValue,
-            dimensionUnit: DIMENSION_UNIT.PPM,
-            remark: null
-        };
+            const avgValue = calcNitrateAvg(pairConfig.itemIds, sampleCount);
+            const avgDetail: TbQualityDetail = {
+                id: 0, qualityId: 0,
+                qualityRuleCode: `NITRATE_${DIMENSION_TYPE.AVG}${pairConfig.pairSuffix}`,
+                dimensionType: DIMENSION_TYPE.AVG,
+                dimensionCode: `${DIMENSION_TYPE.AVG}${pairConfig.pairSuffix}`,
+                dimensionValue: avgValue,
+                dimensionUnit: DIMENSION_UNIT.PPM,
+                remark: null
+            };
 
-        updateDetails("NITRATE", [randomDetail, avgDetail]);
+            return [randomDetail, avgDetail];
+        });
+
+        updateDetails("NITRATE", allDetails);
     };
 
     const chooseTruck = async (truck: QcCheck) => {
@@ -504,13 +508,59 @@ export const useQcPineapple = () => {
         updateDetail(groupName, detail);
     };
     // action handlers
+    const withNitrateDefaults = (list: QualityRequest[]): QualityRequest[] => {
+        const nitrateIdx = list.findIndex(item => item.qualityType === "NITRATE");
+        const existingDetails = nitrateIdx !== -1 ? (list[nitrateIdx].tbQualityDetails ?? []) : [];
+
+        const defaultsToAdd = NITRATE_PAIR_CONFIG.flatMap(pairConfig => {
+            const randomCode = `NITRATE_${DIMENSION_TYPE.RANDOM}${pairConfig.pairSuffix}`;
+            if (existingDetails.some(d => d.qualityRuleCode === randomCode)) return [];
+            const sampleCount = nitrateSampleCounts[pairConfig.key] ?? nitrateOptions[0];
+            return [{
+                id: 0, qualityId: 0,
+                qualityRuleCode: randomCode,
+                dimensionType: DIMENSION_TYPE.RANDOM,
+                dimensionCode: `${DIMENSION_TYPE.RANDOM}${pairConfig.pairSuffix}`,
+                dimensionValue: sampleCount > 0 ? sampleCount : null,
+                dimensionUnit: DIMENSION_UNIT.EACH,
+                remark: null
+            } as TbQualityDetail];
+        });
+
+        if (!defaultsToAdd.length) return list;
+
+        const updated = [...list];
+        if (nitrateIdx === -1) {
+            const dateformat = getLocalISOString(new Date()).slice(0, 10).replace(/-/g, "");
+            updated.push({
+                qualityId: 0,
+                qualityCode: `QC_NITRATE_${dateformat}`,
+                qualityType: "NITRATE",
+                planCode: `NITRATE_${dateformat}`,
+                docId: selectedTruck?.sequenceId || "",
+                docRefType: DOC_TYPE.WEIGHTDATA,
+                inspectorDateTime: getLocalISOString(new Date()),
+                inspectorBy,
+                status: QUALITY_STATUS.PENDING,
+                remark: "",
+                tbQualityDetails: defaultsToAdd
+            });
+        } else {
+            updated[nitrateIdx] = {
+                ...updated[nitrateIdx],
+                tbQualityDetails: [...existingDetails, ...defaultsToAdd]
+            };
+        }
+        return updated;
+    };
+
     const saveDraft = async () => {
         setConfirmOpen(false);
         setIsLoading(true);
         try {
             let hasError = false;
 
-            for (const item of qualityRequestList) {
+            for (const item of withNitrateDefaults(qualityRequestList)) {
                 const data: QcInsertResponse = await qcService.insertQualityData(item);
 
                 if (!data.isSuccess) {
@@ -541,7 +591,7 @@ export const useQcPineapple = () => {
 
         try {
             let hasError = false;
-            for (const item of qualityRequestList) {
+            for (const item of withNitrateDefaults(qualityRequestList)) {
 
                 const payload = { ...item, status: QUALITY_STATUS.COMPLETE };
                 const data: QcInsertResponse = await qcService.insertQualityData(payload);

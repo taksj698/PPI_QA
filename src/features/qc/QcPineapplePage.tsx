@@ -127,6 +127,7 @@ const QcPineapplePage = () => {
   const [sourceTypes, setSourceTypes] = useState<QcMasterItem[]>([]);
   const [sourceZones, setSourceZones] = useState<QcMasterItem[]>([]);
   const [sourceRegions, setSourceRegions] = useState<QcMasterItem[]>([]);
+  const [sourceDumpers, setSourceDumpers] = useState<QcMasterItem[]>([]);
   const [epicorPoList, setEpicorPoList] = useState<EpicorPoItem[]>([]);
 
   useEffect(() => {
@@ -137,6 +138,7 @@ const QcPineapplePage = () => {
           setSourceTypes(res.data.sourceTypes);
           setSourceZones(res.data.sourceZones);
           setSourceRegions(res.data.sourceRegions);
+          setSourceDumpers(res.data.sourceDumpers ?? []);
         }
       })
       .catch(console.error);
@@ -803,8 +805,11 @@ const QcPineapplePage = () => {
                     <MenuItem value="">
                       <em>-- เลือก Dumper No. --</em>
                     </MenuItem>
-                    <MenuItem value="1">1</MenuItem>
-                    <MenuItem value="2">2</MenuItem>
+                    {sourceDumpers.map((item) => (
+                      <MenuItem key={item.code} value={item.code}>
+                        {item.name}
+                      </MenuItem>
+                    ))}
                   </TextField>
                   <Box>
                     <FormLabel sx={{ fontSize: "0.75rem" }}>No3 Tag</FormLabel>
