@@ -6,6 +6,7 @@ import { QcTicketResponse } from "@/types/QcResponse.type";
 import { QualityRequest } from "@/types/qualityRequest.type";
 import { TbConfigResponse } from "@/types/TbConfig.type";
 import { QcMasterResponse } from "@/types/qcMaster.type";
+import { TbProductResponse } from "@/types/tbProduct.type";
 
 export interface EpicorPoItem {
     poHeader_OrderDate: string;
@@ -67,6 +68,10 @@ export const qcService = {
     },
     async getEpicorPo(): Promise<EpicorPoResponse> {
         const response = await api.get<EpicorPoResponse>("/Epicor/po");
+        return response.data;
+    },
+    async getProducts(): Promise<TbProductResponse> {
+        const response = await api.get<TbProductResponse>("/TbProduct/all");
         return response.data;
     },
     async getQcByTicketCode(ticketCode: string): Promise<QcTicketResponse> {

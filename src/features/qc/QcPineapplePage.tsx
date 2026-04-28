@@ -128,6 +128,8 @@ const QcPineapplePage = () => {
   const [sourceZones, setSourceZones] = useState<QcMasterItem[]>([]);
   const [sourceRegions, setSourceRegions] = useState<QcMasterItem[]>([]);
   const [sourceDumpers, setSourceDumpers] = useState<QcMasterItem[]>([]);
+  const [products, setProducts] = useState<{ productId: string; productName: string }[]>([]);
+  const [productWeights, setProductWeights] = useState<Record<string, string>>({});
   const [epicorPoList, setEpicorPoList] = useState<EpicorPoItem[]>([]);
 
   useEffect(() => {
@@ -139,6 +141,15 @@ const QcPineapplePage = () => {
           setSourceZones(res.data.sourceZones);
           setSourceRegions(res.data.sourceRegions);
           setSourceDumpers(res.data.sourceDumpers ?? []);
+        }
+      })
+      .catch(console.error);
+
+    qcService
+      .getProducts()
+      .then((res) => {
+        if (res.isSuccess && res.data) {
+          setProducts(res.data.filter((p) => p.productId !== "BIG"));
         }
       })
       .catch(console.error);
@@ -840,6 +851,70 @@ const QcPineapplePage = () => {
                   </Box>
                 </Stack>
               </Box>
+
+              {/* Product Weight Section */}
+              {products.length > 0 && (
+                <>
+                  <Divider sx={{ my: 2 }} />
+                  <Typography
+                    variant="caption"
+                    fontWeight={800}
+                    color="text.secondary"
+                    sx={{
+                      display: "block",
+                      mb: 1.5,
+                      textTransform: "uppercase",
+                      letterSpacing: 1,
+                    }}
+                  >
+                    น้ำหนักสินค้า (กก.)
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: {
+                        xs: "1fr 1fr",
+                        sm: "repeat(4, 1fr)",
+                        lg: "repeat(8, 1fr)",
+                      },
+                      gap: 1.5,
+                    }}
+                  >
+                    {products.map((p) => (
+                      <TextField
+                        key={p.productId}
+                        label={p.productName}
+                        size="small"
+                        type="number"
+                        fullWidth
+                        value={productWeights[p.productId] ?? ""}
+                        onChange={(e) =>
+                          setProductWeights((prev) => ({
+                            ...prev,
+                            [p.productId]: e.target.value,
+                          }))
+                        }
+                        slotProps={{
+                          inputLabel: { shrink: true },
+                          input: {
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <Typography variant="caption" color="text.secondary">
+                                  กก.
+                                </Typography>
+                              </InputAdornment>
+                            ),
+                          },
+                        }}
+                        sx={{
+                          "& .MuiOutlinedInput-root": { borderRadius: 2 },
+                          "& input": { textAlign: "right", fontWeight: 700 },
+                        }}
+                      />
+                    ))}
+                  </Box>
+                </>
+              )}
             </Paper>
 
             <TableContainer
