@@ -128,7 +128,7 @@ const QcPineapplePage = () => {
   const [sourceZones, setSourceZones] = useState<QcMasterItem[]>([]);
   const [sourceRegions, setSourceRegions] = useState<QcMasterItem[]>([]);
   const [sourceDumpers, setSourceDumpers] = useState<QcMasterItem[]>([]);
-  const [products, setProducts] = useState<{ productId: string; productName: string }[]>([]);
+  const [products, setProducts] = useState<{ id: number; productId: string; productName: string }[]>([]);
   const [productWeights, setProductWeights] = useState<Record<string, string>>({});
   const [epicorPoList, setEpicorPoList] = useState<EpicorPoItem[]>([]);
 
@@ -148,11 +148,16 @@ const QcPineapplePage = () => {
     qcService
       .getProducts()
       .then((res) => {
+        console.log("[getProducts] response:", res);
         if (res.isSuccess && res.data) {
-          setProducts(res.data.filter((p) => p.productId !== "BIG"));
+          const filtered = res.data
+            .filter((p) => p.productId !== "BIG")
+            .map((p) => ({ id: p.id, productId: p.productId, productName: p.productName }));
+          console.log("[getProducts] filtered products:", filtered);
+          setProducts(filtered);
         }
       })
-      .catch(console.error);
+      .catch((e) => console.error("[getProducts] error:", e));
   }, []);
 
   const handleDetailChange = (field: string, value: string | boolean) => {
@@ -239,6 +244,23 @@ const QcPineapplePage = () => {
       // 404 = ยังไม่เคยบันทึก ไม่ต้อง error
       console.warn("No saved QC detail:", e);
     }
+
+    // prefill product weights
+    try {
+      const pwRes = await qcService.getProductWeights(truck.sequenceId);
+      if (pwRes.isSuccess && pwRes.data?.tbWeightSummaryDetails?.length) {
+        const mapped: Record<string, string> = {};
+        pwRes.data.tbWeightSummaryDetails.forEach((item) => {
+          const product = products.find((p) => p.id === item.productId);
+          if (product) {
+            mapped[product.productId] = String(item.grossWeight);
+          }
+        });
+        setProductWeights(mapped);
+      }
+    } catch (e) {
+      console.warn("No saved product weights:", e);
+    }
   };
 
   const handlePoSelect = (poNum: string) => {
@@ -273,11 +295,26 @@ const QcPineapplePage = () => {
     };
   };
 
+  const buildProductWeightPayload = () => ({
+    docId: selectedTruck?.sequenceId ?? "",
+    data: products.map((p) => ({
+      productId: p.id,
+      grossWeight: Math.round(parseFloat(productWeights[p.productId] || "0")),
+    })),
+  });
+
   const saveWithDetail = async (mainAction: () => Promise<void>) => {
+    console.log("[saveWithDetail] called, products:", products.length, "docId:", selectedTruck?.sequenceId);
     try {
       await qcService.saveQcDetail(buildQcDetailPayload());
     } catch (e) {
       console.error("Failed to save qc-detail:", e);
+    }
+    try {
+      console.log("[saveWithDetail] about to save product weights, payload:", buildProductWeightPayload());
+      await qcService.saveProductWeights(buildProductWeightPayload());
+    } catch (e) {
+      console.error("Failed to save product weights:", e);
     }
     await mainAction();
   };
@@ -1534,8 +1571,9 @@ const QcPineapplePage = () => {
         accentColor={THEME_ACCENT}
         confirmColor={THEME_NAVY}
         onCancel={() => setConfirmOpen(false)}
-        onConfirm={() => {
-          confirmAction?.(); // 🔥 เรียก function ที่ set มา
+        onConfirm={async () => {
+          console.log("[onConfirm] confirmAction:", confirmAction);
+          await confirmAction?.();
           setConfirmOpen(false);
         }}
       />

@@ -70,7 +70,7 @@ export const useQcPineapple = () => {
     const [isSearching, setIsSearching] = useState<boolean>(false);
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [confirmOpen, setConfirmOpen] = useState(false);
-    const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
+    const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
     const [confirmConfig, setConfirmConfig] = useState({
         title: "",
         description: "",

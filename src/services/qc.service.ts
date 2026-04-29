@@ -7,6 +7,7 @@ import { QualityRequest } from "@/types/qualityRequest.type";
 import { TbConfigResponse } from "@/types/TbConfig.type";
 import { QcMasterResponse } from "@/types/qcMaster.type";
 import { TbProductResponse } from "@/types/tbProduct.type";
+import { WeightSummaryResponse } from "@/types/weightSummary.type";
 
 export interface EpicorPoItem {
     poHeader_OrderDate: string;
@@ -72,6 +73,13 @@ export const qcService = {
     },
     async getProducts(): Promise<TbProductResponse> {
         const response = await api.get<TbProductResponse>("/TbProduct/all");
+        return response.data;
+    },
+    async saveProductWeights(payload: { docId: string; data: { productId: number; grossWeight: number }[] }): Promise<void> {
+        await api.post("/WeightSummary/product-weight", payload);
+    },
+    async getProductWeights(sequenceId: string): Promise<WeightSummaryResponse> {
+        const response = await api.get<WeightSummaryResponse>(`/WeightSummary/sequenceid/${sequenceId}`);
         return response.data;
     },
     async getQcByTicketCode(ticketCode: string): Promise<QcTicketResponse> {
