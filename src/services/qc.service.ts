@@ -26,6 +26,8 @@ export interface EpicorPoItem {
     poHeader_PPI_CarIDStation_c: string | null;
     udCodes_CodeDesc: string | null;
     rowIdent: string;
+    poDetail_POLine: number | null;
+    poDetail_OrderQty: number | null;
 }
 
 export interface EpicorPoResponse {

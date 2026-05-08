@@ -107,6 +107,7 @@ const QcPineapplePage = () => {
   const [detail, setDetail] = useState({
     docNo: "",
     poNo: "",
+    selectedRowIdent: "",
     supplierId: "",
     nameAddress: "",
     isStation: false,
@@ -176,10 +177,10 @@ const QcPineapplePage = () => {
     setDetail((prev) => ({
       ...prev,
       poNo: String(po.poHeader_PONum),
+      selectedRowIdent: po.rowIdent,
       supplierId: po.vendor_VendorID ?? "",
       nameAddress: [po.vendor_Name, ...addressParts].filter(Boolean).join(" "),
       isStation,
-      ...(isStation && po.vendor_VendorID ? { reject: true } : {}),
     }));
   };
 
@@ -227,6 +228,7 @@ const QcPineapplePage = () => {
         setDetail((prev) => ({
           ...prev,
           poNo: matchingPo ? d.poNo! : prev.poNo,
+          selectedRowIdent: matchingPo ? matchingPo.rowIdent : prev.selectedRowIdent,
           isStation: d.isStation,
           region: d.regionCode ?? prev.region,
           sourceArea: d.zoneCode ?? prev.sourceArea,
@@ -263,8 +265,8 @@ const QcPineapplePage = () => {
     }
   };
 
-  const handlePoSelect = (poNum: string) => {
-    const po = epicorPoList.find((p) => String(p.poHeader_PONum) === poNum);
+  const handlePoSelect = (rowIdent: string) => {
+    const po = epicorPoList.find((p) => p.rowIdent === rowIdent);
     if (po) applyPoToDetail(po);
   };
 
@@ -636,7 +638,7 @@ const QcPineapplePage = () => {
                     label="เลขที่ PO"
                     size="small"
                     fullWidth
-                    value={detail.poNo}
+                    value={detail.selectedRowIdent}
                     onChange={(e) => handlePoSelect(e.target.value)}
                   >
                     <MenuItem value="">
@@ -645,9 +647,9 @@ const QcPineapplePage = () => {
                     {epicorPoList.map((po) => (
                       <MenuItem
                         key={po.rowIdent}
-                        value={String(po.poHeader_PONum)}
+                        value={po.rowIdent}
                       >
-                        {po.poHeader_PONum}
+                        {po.poHeader_OrderDate?.slice(0, 10)} | {po.poHeader_PONum} | Line {po.poDetail_POLine ?? "-"} | {po.poHeader_PPI_CarID_c ?? "-"} | {po.poHeader_PPI_CarIDStation_c ?? "-"} | {po.poDetail_OrderQty ?? "-"}
                       </MenuItem>
                     ))}
                   </TextField>
