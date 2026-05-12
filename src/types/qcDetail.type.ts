@@ -3,6 +3,7 @@ import { ApiResponse } from "./api.types";
 export interface QcDetailRequest {
     docId: string;
     poNo: string;
+    lineNo: number;
     regionCode: string;
     zoneCode: string;
     isReject: boolean;
@@ -19,6 +20,7 @@ export interface QcDetailRequest {
 
 export interface GetQcDetailResponse {
     poNo: string | null;
+    lineNo: number | null;
     regionCode: string | null;
     zoneCode: string | null;
     isReject: boolean | null;

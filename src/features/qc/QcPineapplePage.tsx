@@ -107,6 +107,7 @@ const QcPineapplePage = () => {
   const [detail, setDetail] = useState({
     docNo: "",
     poNo: "",
+    lineNo: 0,
     selectedRowIdent: "",
     supplierId: "",
     nameAddress: "",
@@ -177,6 +178,7 @@ const QcPineapplePage = () => {
     setDetail((prev) => ({
       ...prev,
       poNo: String(po.poHeader_PONum),
+      lineNo: po.poDetail_POLine ?? 0,
       selectedRowIdent: po.rowIdent,
       supplierId: po.vendor_VendorID ?? "",
       nameAddress: [po.vendor_Name, ...addressParts].filter(Boolean).join(" "),
@@ -193,20 +195,21 @@ const QcPineapplePage = () => {
     let filtered: EpicorPoItem[] = [];
     setEpicorPoList([]);
 
-    // fetch Epicor PO list เฉพาะเมื่อมี supplierId
-    if (truck.supplierId) {
-      try {
-        const res = await qcService.getEpicorPo();
-        if (res.isSuccess && res.data?.value?.length) {
-          filtered = res.data.value.filter(
-            (p) => p.vendor_VendorID === truck.supplierId,
-          );
-          setEpicorPoList(filtered);
-          if (filtered.length > 0) applyPoToDetail(filtered[0]);
-        }
-      } catch (e) {
-        console.error("Failed to fetch Epicor PO:", e);
+    // fetch Epicor PO list เสมอ แล้วค่อย filter ตาม supplierId ถ้ามี
+    try {
+      const res = await qcService.getEpicorPo();
+      if (res.isSuccess && res.data?.value?.length) {
+        const allPos = res.data.value;
+        filtered = truck.supplierId
+          ? allPos.filter(
+              (p) => p.vendor_VendorID?.trim() === truck.supplierId?.trim(),
+            )
+          : allPos;
+        setEpicorPoList(filtered);
+        if (filtered.length > 0) applyPoToDetail(filtered[0]);
       }
+    } catch (e) {
+      console.error("Failed to fetch Epicor PO:", e);
     }
 
     // fetch saved QC detail และ prefill ถ้ามีข้อมูล
@@ -228,6 +231,7 @@ const QcPineapplePage = () => {
         setDetail((prev) => ({
           ...prev,
           poNo: matchingPo ? d.poNo! : prev.poNo,
+          lineNo: matchingPo ? (matchingPo.poDetail_POLine ?? 0) : (d.lineNo ?? prev.lineNo),
           selectedRowIdent: matchingPo ? matchingPo.rowIdent : prev.selectedRowIdent,
           isStation: d.isStation,
           region: d.regionCode ?? prev.region,
@@ -282,6 +286,7 @@ const QcPineapplePage = () => {
     return {
       docId: selectedTruck?.sequenceId ?? "",
       poNo: detail.poNo,
+      lineNo: detail.lineNo,
       regionCode: detail.region,
       zoneCode: detail.sourceArea,
       isReject: detail.reject,
