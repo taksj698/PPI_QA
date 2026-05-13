@@ -104,26 +104,32 @@ const QcPineapplePage = () => {
     getSectionCriteria,
   } = useQcPineapple();
 
-  const [detail, setDetail] = useState({
-    docNo: "",
-    poNo: "",
-    lineNo: 0,
-    selectedRowIdent: "",
-    supplierId: "",
-    nameAddress: "",
-    isStation: false,
-    receiveDate: "",
-    receiveTime: "",
-    exitTime: "",
-    receiver: "",
-    productType: "",
-    sourceArea: "",
-    region: "",
-    reject: false,
-    remark: "",
-    truckType: "",
-    dumperNo: "",
-    no3Tag: "",
+  const [detail, setDetail] = useState(() => {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const todayDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    const nowTime = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    return {
+      docNo: "",
+      poNo: "",
+      lineNo: 0,
+      selectedRowIdent: "",
+      supplierId: "",
+      nameAddress: "",
+      isStation: false,
+      receiveDate: todayDate,
+      receiveTime: nowTime,
+      exitTime: "",
+      receiver: "",
+      productType: "",
+      sourceArea: "",
+      region: "",
+      reject: false,
+      remark: "",
+      truckType: "",
+      dumperNo: "",
+      no3Tag: "",
+    };
   });
 
   const [sourceTypes, setSourceTypes] = useState<QcMasterItem[]>([]);
@@ -186,30 +192,56 @@ const QcPineapplePage = () => {
     }));
   };
 
+  const getDetailDefaults = () => {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const todayDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    const nowTime = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    return {
+      docNo: "",
+      poNo: "",
+      lineNo: 0,
+      selectedRowIdent: "",
+      supplierId: "",
+      nameAddress: "",
+      isStation: false,
+      receiveDate: todayDate,
+      receiveTime: nowTime,
+      exitTime: "",
+      receiver: "",
+      productType: "",
+      sourceArea: "",
+      region: "",
+      reject: false,
+      remark: "",
+      truckType: "",
+      dumperNo: "",
+      no3Tag: "",
+    };
+  };
+
   const handleChooseTruck = async (
     truck: Parameters<typeof chooseTruck>[0],
   ) => {
     await chooseTruck(truck);
-    setDetail((prev) => ({ ...prev, docNo: truck.sequenceId ?? "" }));
+    setDetail({ ...getDetailDefaults(), docNo: truck.sequenceId ?? "" });
 
     let filtered: EpicorPoItem[] = [];
     setEpicorPoList([]);
 
-    // fetch Epicor PO list เสมอ แล้วค่อย filter ตาม supplierId ถ้ามี
-    try {
-      const res = await qcService.getEpicorPo();
-      if (res.isSuccess && res.data?.value?.length) {
-        const allPos = res.data.value;
-        filtered = truck.supplierId
-          ? allPos.filter(
-              (p) => p.vendor_VendorID?.trim() === truck.supplierId?.trim(),
-            )
-          : allPos;
-        setEpicorPoList(filtered);
-        if (filtered.length > 0) applyPoToDetail(filtered[0]);
+    if (truck.supplierId) {
+      try {
+        const res = await qcService.getEpicorPo();
+        if (res.isSuccess && res.data?.value?.length) {
+          filtered = res.data.value.filter(
+            (p) => p.vendor_VendorID?.trim() === truck.supplierId?.trim(),
+          );
+          setEpicorPoList(filtered);
+          if (filtered.length > 0) applyPoToDetail(filtered[0]);
+        }
+      } catch (e) {
+        console.error("Failed to fetch Epicor PO:", e);
       }
-    } catch (e) {
-      console.error("Failed to fetch Epicor PO:", e);
     }
 
     // fetch saved QC detail และ prefill ถ้ามีข้อมูล
