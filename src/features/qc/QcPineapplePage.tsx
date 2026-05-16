@@ -256,14 +256,18 @@ const QcPineapplePage = () => {
         // ตรวจว่า poNo ที่บันทึกไว้มีอยู่ใน Epicor list ปัจจุบันไหม
         // ถ้าไม่มี ให้ใช้ค่าจาก Epicor (prev.poNo) แทน เพื่อให้ dropdown แสดงได้
         const matchingPo = d.poNo
-          ? filtered.find((p) => String(p.poHeader_PONum) === d.poNo)
+          ? filtered.find(
+              (p) =>
+                String(p.poHeader_PONum) === d.poNo &&
+                (d.lineNo ? p.poDetail_POLine === d.lineNo : true),
+            )
           : null;
         if (matchingPo) applyPoToDetail(matchingPo);
 
         setDetail((prev) => ({
           ...prev,
           poNo: matchingPo ? d.poNo! : prev.poNo,
-          lineNo: matchingPo ? (matchingPo.poDetail_POLine ?? 0) : (d.lineNo ?? prev.lineNo),
+          lineNo: matchingPo ? (matchingPo.poDetail_POLine ?? 0) : (d.lineNo || prev.lineNo),
           selectedRowIdent: matchingPo ? matchingPo.rowIdent : prev.selectedRowIdent,
           isStation: d.isStation,
           region: d.regionCode ?? prev.region,
@@ -666,9 +670,7 @@ const QcPineapplePage = () => {
                     size="small"
                     fullWidth
                     value={detail.docNo}
-                    onChange={(e) =>
-                      handleDetailChange("docNo", e.target.value)
-                    }
+                    slotProps={{ input: { readOnly: true } }}
                   />
                   <TextField
                     select
@@ -910,7 +912,7 @@ const QcPineapplePage = () => {
                         { value: "green", label: "เขียว" },
                         { value: "yellow", label: "เหลือง" },
                         { value: "red", label: "แดง" },
-                        { value: "yellow_from_green", label: "เหลืองจากเขียว" },
+                        { value: "yellow_with_green", label: "เหลืองคาดเขียว" },
                         { value: "brown", label: "น้ำตาล" },
                       ].map((tag) => (
                         <FormControlLabel
