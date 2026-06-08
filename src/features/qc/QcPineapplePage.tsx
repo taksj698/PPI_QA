@@ -224,7 +224,7 @@ const QcPineapplePage = () => {
     truck: Parameters<typeof chooseTruck>[0],
   ) => {
     await chooseTruck(truck);
-    setDetail({ ...getDetailDefaults(), docNo: truck.sequenceId ?? "" });
+    setDetail({ ...getDetailDefaults(), docNo: truck.sequenceId ?? "", supplierId: truck.supplierId ?? "" });
 
     let filtered: EpicorPoItem[] = [];
     setEpicorPoList([]);
